@@ -65,7 +65,7 @@ namespace FlowCommandLine {
                 Delegate = @delegate,
                 Description = description,
                 Parameters = parameters
-                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.Name ) && !string.IsNullOrEmpty ( a.Description ) )
+                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) && !string.IsNullOrEmpty ( a.Description ) )
                     .ToList ()
             };
 
@@ -78,7 +78,7 @@ namespace FlowCommandLine {
                 Delegate = @delegate,
                 Description = description,
                 Parameters = parameters
-                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.Name ) && !string.IsNullOrEmpty ( a.Description ) )
+                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) && !string.IsNullOrEmpty ( a.Description ) )
                     .ToList ()
             };
 
@@ -146,11 +146,11 @@ namespace FlowCommandLine {
             ParseParameters ( parts, out var command, out var parameters );
 
             if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                flowCommand.Delegate?.Invoke ( new FlowParameters ( parameters ) );
+                flowCommand.Delegate?.Invoke ( parameters );
                 return Task.CompletedTask;
             }
             if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) {
-                var task = flowAsyncCommand.Delegate?.Invoke ( new FlowParameters ( parameters ) );
+                var task = flowAsyncCommand.Delegate?.Invoke ( parameters );
                 if ( task != null ) return task;
             }
 
@@ -178,7 +178,7 @@ namespace FlowCommandLine {
             ParseParameters ( parts, out var command, out var parameters );
 
             if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                flowCommand.Delegate?.Invoke ( new FlowParameters ( parameters ) );
+                flowCommand.Delegate?.Invoke ( parameters );
                 return;
             }
 

@@ -2,6 +2,7 @@
 using FlowCommandLine;
 
 namespace FlowCommandLineTests {
+
     public class CommandLineUnitTests {
 
         [Fact]
