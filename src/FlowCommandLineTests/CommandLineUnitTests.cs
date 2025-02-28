@@ -72,6 +72,8 @@ namespace FlowCommandLineTests {
             Assert.Equal ( " ", messages.ElementAt ( 3 ) );
         }
 
+        public record RunCommand_Success_OnlyCommands_ShowHelp_Class { }
+
         [Fact]
         public void RunCommand_Success_OnlyCommands_ShowHelp () {
             //arrange
@@ -84,9 +86,9 @@ namespace FlowCommandLineTests {
             //act
             commandLine
                 .Application ( "TestApplication", "1.0.0" )
-                .AddCommand ( "test", ( arg ) => { }, "description", Enumerable.Empty<FlowCommandParameter> () )
-                .AddCommand ( "test-borod", ( arg ) => { }, "description1", Enumerable.Empty<FlowCommandParameter> () )
-                .AddCommand ( "longcommandname", ( arg ) => { }, "description2", Enumerable.Empty<FlowCommandParameter> () )
+                .AddCommand ( "test", ( RunCommand_Success_OnlyCommands_ShowHelp_Class arg ) => { }, "description", Enumerable.Empty<FlowCommandParameter> () )
+                .AddCommand ( "test-borod", ( RunCommand_Success_OnlyCommands_ShowHelp_Class arg ) => { }, "description1", Enumerable.Empty<FlowCommandParameter> () )
+                .AddCommand ( "longcommandname", ( RunCommand_Success_OnlyCommands_ShowHelp_Class arg ) => { }, "description2", Enumerable.Empty<FlowCommandParameter> () )
                 .RunCommand ();
 
             //assert

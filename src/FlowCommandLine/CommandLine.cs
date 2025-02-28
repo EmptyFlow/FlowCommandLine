@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace FlowCommandLine {
 
@@ -59,9 +60,9 @@ namespace FlowCommandLine {
         /// <param name="delegate">Delegate that will be called in case if user select this command in console.</param>
         /// <param name="description">A human-readable description of the command.</param>
         /// <param name="parameters">Command parameters.</param>
-        public CommandLine AddCommand ( string name, FlowCommandLineCommandDelegate @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) {
+        public CommandLine AddCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicProperties )] T> ( string name, FlowCommandLineCommandDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
             var lowerName = name.ToLowerInvariant ();
-            m_commands[lowerName] = new FlowCommand {
+            m_commands[lowerName] = new FlowCommandDelegate<T> {
                 Delegate = @delegate,
                 Description = description,
                 Parameters = parameters
@@ -72,9 +73,9 @@ namespace FlowCommandLine {
             return this;
         }
 
-        public CommandLine AddAsyncCommand ( string name, FlowCommandLineCommandAsyncDelegate @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) {
+        public CommandLine AddAsyncCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicProperties )] T> ( string name, FlowCommandLineCommandAsyncDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
             var lowerName = name.ToLowerInvariant ();
-            m_asyncCommands[lowerName] = new FlowAsyncCommand {
+            m_asyncCommands[lowerName] = new FlowCommandAsyncDelegate<T> {
                 Delegate = @delegate,
                 Description = description,
                 Parameters = parameters
@@ -146,13 +147,10 @@ namespace FlowCommandLine {
             ParseParameters ( parts, out var command, out var parameters );
 
             if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                flowCommand.Delegate?.Invoke ( parameters );
+                flowCommand.Execute ( parameters );
                 return Task.CompletedTask;
             }
-            if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) {
-                var task = flowAsyncCommand.Delegate?.Invoke ( parameters );
-                if ( task != null ) return task;
-            }
+            if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute( parameters );
 
             ShowHelp ( parts );
             return Task.CompletedTask;
@@ -178,7 +176,7 @@ namespace FlowCommandLine {
             ParseParameters ( parts, out var command, out var parameters );
 
             if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                flowCommand.Delegate?.Invoke ( parameters );
+                flowCommand.Execute ( parameters );
                 return;
             }
 

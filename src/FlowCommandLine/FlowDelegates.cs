@@ -1,7 +1,7 @@
 ﻿namespace FlowCommandLine {
 
-    public delegate void FlowCommandLineCommandDelegate ( Dictionary<string, string> parameters );
+    public delegate void FlowCommandLineCommandDelegate<T> ( T parameters );
 
-    public delegate Task FlowCommandLineCommandAsyncDelegate ( Dictionary<string, string> parameters );
+    public delegate Task FlowCommandLineCommandAsyncDelegate<T> ( T parameters );
 
 }
