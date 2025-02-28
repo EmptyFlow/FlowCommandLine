@@ -86,45 +86,88 @@ namespace FlowCommandLine {
             return this;
         }
 
+        private void ShowCommandHelp ( string description, List<FlowCommandParameter> parameters ) {
+            m_commandLineProvider.WriteLine ( description );
+            m_commandLineProvider.WriteLine ( " " );
+            ShowParameters ( parameters );
+        }
+
+        private void ShowParameters ( List<FlowCommandParameter> commandParameters ) {
+            m_commandLineProvider.WriteLine ( "The following parameters are available:" );
+            foreach ( var parameter in commandParameters ) {
+                var parameters = new List<string> ();
+                if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
+                if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
+
+                m_commandLineProvider.WriteLine ( $"  {string.Join ( ' ', parameters )} {parameter.Description}" );
+            }
+        }
+
         /// <summary>
         /// Show application help and a list of available commands.
         /// </summary>
-        private void ShowHelp ( List<string> parts ) {
-            m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
-            if ( !string.IsNullOrEmpty ( m_applicationCopyright ) ) m_commandLineProvider.WriteLine ( m_applicationCopyright );
-            m_commandLineProvider.WriteLine ( " " );
-            if ( !string.IsNullOrEmpty ( m_applicationDescription ) ) {
-                m_commandLineProvider.WriteLine ( m_applicationDescription );
+        private void ShowHelp ( List<string> parts, bool fullInfo = false ) {
+            if ( fullInfo ) {
+                m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
+                if ( !string.IsNullOrEmpty ( m_applicationCopyright ) ) m_commandLineProvider.WriteLine ( m_applicationCopyright );
                 m_commandLineProvider.WriteLine ( " " );
-            }
-            if ( !string.IsNullOrEmpty ( m_applicationExecutable ) ) {
-                m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} [<command>] [<parameters>]" );
-                m_commandLineProvider.WriteLine ( " " );
-            }
-
-            if ( m_commands.Any () || m_asyncCommands.Any () ) {
-                var maximumLength = m_commands
-                    .Select ( a => a.Key )
-                    .Concat ( m_asyncCommands.Select ( b => b.Key ) )
-                    .Select ( a => a.Length )
-                    .Max () + 1;
-                m_commandLineProvider.WriteLine ( "The following commands are available:" );
-
-                foreach ( var command in m_commands ) {
-                    var name = command.Key;
-                    var value = command.Value;
-                    if ( name.Length < maximumLength ) name += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - name.Length ) );
-
-                    m_commandLineProvider.WriteLine ( $"  {name}{value.Description}" );
+                if ( !string.IsNullOrEmpty ( m_applicationDescription ) ) {
+                    m_commandLineProvider.WriteLine ( m_applicationDescription );
+                    m_commandLineProvider.WriteLine ( " " );
                 }
-                foreach ( var asyncCommand in m_asyncCommands ) {
-                    var name = asyncCommand.Key;
-                    var value = asyncCommand.Value;
-                    if ( name.Length < maximumLength ) name += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - name.Length ) );
-
-                    m_commandLineProvider.WriteLine ( $"  {name}{value.Description}" );
+                if ( !string.IsNullOrEmpty ( m_applicationExecutable ) ) {
+                    m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} [<command>] [<parameters>]" );
+                    m_commandLineProvider.WriteLine ( " " );
                 }
+
+                if ( m_commands.Any () || m_asyncCommands.Any () ) {
+                    if ( parts.Any ( IsHelpParameter ) && ShowHelpBySingleCommand ( parts ) ) return;
+
+                    var maximumLength = m_commands
+                        .Select ( a => a.Key )
+                        .Concat ( m_asyncCommands.Select ( b => b.Key ) )
+                        .Select ( a => a.Length )
+                        .Max () + 1;
+                    m_commandLineProvider.WriteLine ( "The following commands are available:" );
+
+                    foreach ( var command in m_commands ) {
+                        var name = command.Key;
+                        var value = command.Value;
+                        if ( name.Length < maximumLength ) name += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - name.Length ) );
+
+                        m_commandLineProvider.WriteLine ( $"  {name}{value.Description}" );
+                    }
+                    foreach ( var asyncCommand in m_asyncCommands ) {
+                        var name = asyncCommand.Key;
+                        var value = asyncCommand.Value;
+                        if ( name.Length < maximumLength ) name += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - name.Length ) );
+
+                        m_commandLineProvider.WriteLine ( $"  {name}{value.Description}" );
+                    }
+                }
+            } else {
+                if ( !parts.Any () ) return;
+
+                m_commandLineProvider.WriteLine ( $" " );
+                ShowHelpBySingleCommand ( parts );
             }
+        }
+
+        private bool ShowHelpBySingleCommand ( List<string> parts ) {
+            var command = parts.First ();
+
+            if ( m_commands.ContainsKey ( command ) ) {
+                var selectedCommand = m_commands[command];
+                ShowCommandHelp ( selectedCommand.Description, selectedCommand.Parameters );
+                return true;
+            }
+            if ( m_asyncCommands.ContainsKey ( command ) ) {
+                var selectedCommand = m_asyncCommands[command];
+                ShowCommandHelp ( selectedCommand.Description, selectedCommand.Parameters );
+                return true;
+            }
+
+            return false;
         }
 
         private void ShowVersion () => m_commandLineProvider.WriteLine ( $"{m_applicationVersion}" );
@@ -140,17 +183,20 @@ namespace FlowCommandLine {
 
             var parts = GetParts ();
             if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
-                ShowHelp ( parts );
+                ShowHelp ( parts, true );
                 return Task.CompletedTask;
             }
 
             ParseParameters ( parts, out var command, out var parameters );
 
-            if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                flowCommand.Execute ( parameters );
-                return Task.CompletedTask;
+            try {
+                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
+                    flowCommand.Execute ( parameters );
+                    return Task.CompletedTask;
+                }
+                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute ( parameters );
+            } catch {
             }
-            if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute( parameters );
 
             ShowHelp ( parts );
             return Task.CompletedTask;
@@ -175,9 +221,12 @@ namespace FlowCommandLine {
 
             ParseParameters ( parts, out var command, out var parameters );
 
-            if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                flowCommand.Execute ( parameters );
-                return;
+            try {
+                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
+                    flowCommand.Execute ( parameters );
+                    return;
+                }
+            } catch {
             }
 
             ShowHelp ( parts );

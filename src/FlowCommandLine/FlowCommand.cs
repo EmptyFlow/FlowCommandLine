@@ -27,8 +27,9 @@ namespace FlowCommandLine {
             }
 
             var requiredParameters = Parameters.Where ( a => a.Required ).ToList ();
-            if ( requiredParameters.Intersect ( processedParameters ).Count () == requiredParameters.Count ) {
+            if ( requiredParameters.Intersect ( processedParameters ).Count () != requiredParameters.Count ) {
                 Console.WriteLine ( "Not all required parameters is defined!" );
+                throw new Exception ( "Not all required parameters is defined!" );
             }
 
             return result;
