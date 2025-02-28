@@ -273,10 +273,10 @@ namespace FlowCommandLine {
             command = parts.First ().ToLowerInvariant ();
             parameters = parts
                 .Skip ( 1 )
-                .Where ( a => a.StartsWith ( "-" ) && a.Length > 1 )
+                .Where ( a => ( a.StartsWith ( "-" ) && a.Length > 1 ) || ( a.StartsWith ( "--" ) && a.Length > 2 ) )
                 .Select (
                     a => {
-                        var pair = a.Substring ( 1 ).Split ( "=" );
+                        var pair = a.StartsWith ( "--" ) ? a.Substring ( 2 ).Split ( "=" ) : a.Substring ( 1 ).Split ( "=" );
                         return new { Name = pair[0], Value = pair.Length > 1 ? pair[1] : "" };
                     }
                 )
