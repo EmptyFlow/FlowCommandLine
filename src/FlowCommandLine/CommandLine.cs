@@ -68,7 +68,7 @@ namespace FlowCommandLine {
                 Delegate = @delegate,
                 Description = description,
                 Parameters = parameters
-                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) && !string.IsNullOrEmpty ( a.Description ) )
+                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) )
                     .ToList ()
             };
 
@@ -81,7 +81,7 @@ namespace FlowCommandLine {
                 Delegate = @delegate,
                 Description = description,
                 Parameters = parameters
-                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) && !string.IsNullOrEmpty ( a.Description ) )
+                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) )
                     .ToList ()
             };
 
@@ -131,7 +131,7 @@ namespace FlowCommandLine {
 
             var parts = GetParts ();
             if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
-                ShowHelp ( parts );
+                ShowHelp ( parts, true );
                 return;
             }
 

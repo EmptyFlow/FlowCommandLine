@@ -102,6 +102,87 @@ namespace FlowCommandLineTests {
             Assert.Equal ( "  longcommandname description2", messages.ElementAt ( 5 ) );
         }
 
+        public record RunCommand_Success_OnlyCommands_SingleCommand_Class {
+            public string Parameter1 { get; set; } = "";
+            public string Parameter2 { get; set; } = "";
+            public string Parameter3 { get; set; } = "";
+        }
+
+        [Fact]
+        public void RunCommand_Success_OnlyCommands_SingleCommand () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test -parameter1=param1value -parameter2=param2value -parameter3=param3value" );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            var isCorrect = false;
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand (
+                    "test",
+                    ( RunCommand_Success_OnlyCommands_SingleCommand_Class arg ) => {
+                        isCorrect = arg.Parameter1 == "param1value" &&
+                            arg.Parameter2 == "param2value" &&
+                            arg.Parameter3 == "param3value";
+                    },
+                    "",
+                    new List<FlowCommandParameter> {
+                        new FlowCommandParameter { FullName = "Parameter1" },
+                        new FlowCommandParameter { FullName = "Parameter2" },
+                        new FlowCommandParameter { FullName = "Parameter3" },
+                    }
+                )
+                .RunCommand ();
+
+            //assert
+            Assert.True ( isCorrect );
+        }
+
+        public record RunCommand_Success_IntLongDoubleFloatTypes_Class {
+            public int Parameter1 { get; set; }
+            public long Parameter2 { get; set; }
+            public double Parameter3 { get; set; }
+            public float Parameter4 { get; set; }
+        }
+
+        [Fact]
+        public void RunCommand_Success_IntLongDoubleFloatTypes () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test -parameter1=1200 -parameter2=5000000000 -parameter3=5.20 -parameter4=0.20" );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            var isCorrect = false;
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand (
+                    "test",
+                    ( RunCommand_Success_IntLongDoubleFloatTypes_Class arg ) => {
+                        isCorrect = arg.Parameter1 == 1200 &&
+                            arg.Parameter2 == 5000000000 &&
+                            arg.Parameter3 == 5.20d &&
+                            arg.Parameter4 == 0.20f;
+                    },
+                    "",
+                    new List<FlowCommandParameter> {
+                        new FlowCommandParameter { FullName = "Parameter1" },
+                        new FlowCommandParameter { FullName = "Parameter2" },
+                        new FlowCommandParameter { FullName = "Parameter3" },
+                        new FlowCommandParameter { FullName = "Parameter4" },
+                    }
+                )
+                .RunCommand ();
+
+            //assert
+            Assert.True ( isCorrect );
+        }
+
     }
 
 }
