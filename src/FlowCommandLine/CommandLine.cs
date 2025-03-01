@@ -23,6 +23,8 @@ namespace FlowCommandLine {
 
         private Dictionary<string, FlowAsyncCommand> m_asyncCommands = new ();
 
+        private List<FlowCommandParameter> m_options = new ();
+
         /// <summary>
         /// Create instance of command line compiler and adjust string with command line.
         /// </summary>
@@ -84,6 +86,103 @@ namespace FlowCommandLine {
             };
 
             return this;
+        }
+
+        /// <summary>
+        /// Run the command from the command line.
+        /// </summary>
+        public Task RunCommandAsync () {
+            if ( IsVersion () ) {
+                ShowVersion ();
+                return Task.CompletedTask;
+            }
+
+            var parts = GetParts ();
+            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
+                ShowHelp ( parts, true );
+                return Task.CompletedTask;
+            }
+
+            ParseParameters ( parts, out var command, out var parameters );
+
+            try {
+                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
+                    flowCommand.Execute ( parameters );
+                    return Task.CompletedTask;
+                }
+                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute ( parameters );
+            } catch {
+            }
+
+            ShowHelp ( parts );
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Run the command from the command line.
+        /// </summary>
+        public void RunCommand () {
+            if ( m_asyncCommands.Any () ) throw new ArgumentException ( "You have asynchronized commands, you need to use RunCommandAsync method inside!" );
+
+            if ( IsVersion () ) {
+                ShowVersion ();
+                return;
+            }
+
+            var parts = GetParts ();
+            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
+                ShowHelp ( parts );
+                return;
+            }
+
+            ParseParameters ( parts, out var command, out var parameters );
+
+            try {
+                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
+                    flowCommand.Execute ( parameters );
+                    return;
+                }
+            } catch {
+            }
+
+            ShowHelp ( parts );
+        }
+
+        public CommandLine AddOption ( string shortName = "", string fullName = "", string description = "", string propertyName = "", bool required = false ) {
+            m_options.Add (
+                new FlowCommandParameter {
+                    Description = description,
+                    FullName = fullName,
+                    ShortName = shortName,
+                    Required = required,
+                    PropertyName = propertyName
+                }
+            );
+
+            return this;
+        }
+
+        /// <summary>
+        /// Run the command from the command line.
+        /// </summary>
+        public T? RunOptions<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicProperties )] T> () where T : new() {
+            if ( IsVersion () ) {
+                ShowVersion ();
+                return default;
+            }
+
+            var parts = GetParts ();
+            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
+                ShowOptionsHelp ();
+                return default;
+            }
+
+            ParseOptionParameters ( parts, out var parameters );
+
+            var flowOptions = new FlowOptions<T> {
+                Parameters = m_options
+            };
+            return flowOptions.MapParametersToType ( parameters );
         }
 
         private void ShowCommandHelp ( string description, List<FlowCommandParameter> parameters ) {
@@ -148,9 +247,31 @@ namespace FlowCommandLine {
             } else {
                 if ( !parts.Any () ) return;
 
-                m_commandLineProvider.WriteLine ( $" " );
-                ShowHelpBySingleCommand ( parts );
+                var command = parts.First ();
+                if ( m_commands.ContainsKey ( command ) || m_asyncCommands.ContainsKey ( command ) ) {
+                    m_commandLineProvider.WriteLine ( $" " );
+                    ShowHelpBySingleCommand ( parts );
+                } else {
+                    m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
+                    m_commandLineProvider.WriteLine ( "Command is incorrect!" );
+                }
             }
+        }
+
+        private void ShowOptionsHelp () {
+            m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
+            if ( !string.IsNullOrEmpty ( m_applicationCopyright ) ) m_commandLineProvider.WriteLine ( m_applicationCopyright );
+            m_commandLineProvider.WriteLine ( " " );
+            if ( !string.IsNullOrEmpty ( m_applicationDescription ) ) {
+                m_commandLineProvider.WriteLine ( m_applicationDescription );
+                m_commandLineProvider.WriteLine ( " " );
+            }
+            if ( !string.IsNullOrEmpty ( m_applicationExecutable ) ) {
+                m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} [<options>]" );
+                m_commandLineProvider.WriteLine ( " " );
+            }
+
+            if ( m_options.Any () ) ShowParameters ( m_options );
         }
 
         private bool ShowHelpBySingleCommand ( List<string> parts ) {
@@ -168,68 +289,6 @@ namespace FlowCommandLine {
             }
 
             return false;
-        }
-
-        private void ShowVersion () => m_commandLineProvider.WriteLine ( $"{m_applicationVersion}" );
-
-        /// <summary>
-        /// Run the command from the command line.
-        /// </summary>
-        public Task RunCommandAsync () {
-            if ( IsVersion () ) {
-                ShowVersion ();
-                return Task.CompletedTask;
-            }
-
-            var parts = GetParts ();
-            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
-                ShowHelp ( parts, true );
-                return Task.CompletedTask;
-            }
-
-            ParseParameters ( parts, out var command, out var parameters );
-
-            try {
-                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                    flowCommand.Execute ( parameters );
-                    return Task.CompletedTask;
-                }
-                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute ( parameters );
-            } catch {
-            }
-
-            ShowHelp ( parts );
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Run the command from the command line.
-        /// </summary>
-        public void RunCommand () {
-            if ( m_asyncCommands.Any () ) throw new ArgumentException ( "You have asynchronized commands, you need to use RunCommandAsync method inside!" );
-
-            if ( IsVersion () ) {
-                ShowVersion ();
-                return;
-            }
-
-            var parts = GetParts ();
-            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
-                ShowHelp ( parts );
-                return;
-            }
-
-            ParseParameters ( parts, out var command, out var parameters );
-
-            try {
-                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                    flowCommand.Execute ( parameters );
-                    return;
-                }
-            } catch {
-            }
-
-            ShowHelp ( parts );
         }
 
         private List<string> GetParts () {
@@ -265,6 +324,8 @@ namespace FlowCommandLine {
                 .ToList ();
         }
 
+        private void ShowVersion () => m_commandLineProvider.WriteLine ( $"{m_applicationVersion}" );
+
         private bool IsVersion () => m_commandLine is "-v" or "--version";
 
         private bool IsHelpParameter ( string part ) => part is "-h" or "--help";
@@ -273,6 +334,18 @@ namespace FlowCommandLine {
             command = parts.First ().ToLowerInvariant ();
             parameters = parts
                 .Skip ( 1 )
+                .Where ( a => ( a.StartsWith ( "-" ) && a.Length > 1 ) || ( a.StartsWith ( "--" ) && a.Length > 2 ) )
+                .Select (
+                    a => {
+                        var pair = a.StartsWith ( "--" ) ? a.Substring ( 2 ).Split ( "=" ) : a.Substring ( 1 ).Split ( "=" );
+                        return new { Name = pair[0], Value = pair.Length > 1 ? pair[1] : "" };
+                    }
+                )
+                .ToDictionary ( a => a.Name, a => a.Value );
+        }
+
+        private static void ParseOptionParameters ( List<string> parts, out Dictionary<string, string> parameters ) {
+            parameters = parts
                 .Where ( a => ( a.StartsWith ( "-" ) && a.Length > 1 ) || ( a.StartsWith ( "--" ) && a.Length > 2 ) )
                 .Select (
                     a => {

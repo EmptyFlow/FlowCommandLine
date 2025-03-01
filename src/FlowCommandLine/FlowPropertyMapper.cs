@@ -5,6 +5,14 @@ namespace FlowCommandLine {
 
     public static class FlowPropertyMapper {
 
+        public static PropertyInfo? GetPropertyFromParameter ( FlowCommandParameter parameter, IEnumerable<PropertyInfo> properties ) {
+            if ( !string.IsNullOrEmpty ( parameter.PropertyName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.PropertyName );
+            if ( !string.IsNullOrEmpty ( parameter.FullName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.FullName );
+            if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.ShortName );
+
+            return null;
+        }
+
         public static bool SetPropertyValue<T> ( Type type, Dictionary<string, string> values, string parameterKey, T model, PropertyInfo property ) {
             bool isChanged = false;
             switch ( type ) {
