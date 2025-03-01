@@ -6,11 +6,23 @@ namespace FlowCommandLine {
     public static class FlowPropertyMapper {
 
         public static PropertyInfo? GetPropertyFromParameter ( FlowCommandParameter parameter, IEnumerable<PropertyInfo> properties ) {
-            if ( !string.IsNullOrEmpty ( parameter.PropertyName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.PropertyName );
-            if ( !string.IsNullOrEmpty ( parameter.FullName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.FullName );
-            if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.ShortName );
+            if ( !string.IsNullOrEmpty ( parameter.PropertyName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.PropertyName.ToLowerInvariant () );
+            if ( !string.IsNullOrEmpty ( parameter.FullName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.FullName.ToLowerInvariant() );
+            if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.ShortName.ToLowerInvariant () );
 
             return null;
+        }
+
+        public static Dictionary<string, FlowCommandParameter> ParametersToDictionary ( IEnumerable<FlowCommandParameter> parameters ) {
+            var result = new Dictionary<string, FlowCommandParameter> ();
+
+            foreach ( var parameter in parameters ) {
+                if ( !string.IsNullOrEmpty ( parameter.PropertyName ) ) result.Add ( parameter.PropertyName.ToLowerInvariant (), parameter );
+                if ( !string.IsNullOrEmpty ( parameter.FullName ) ) result.Add ( parameter.FullName.ToLowerInvariant (), parameter );
+                if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) result.Add ( parameter.ShortName.ToLowerInvariant (), parameter );
+            }
+
+            return result;
         }
 
         public static bool SetPropertyValue<T> ( Type type, Dictionary<string, string> values, string parameterKey, T model, PropertyInfo property ) {

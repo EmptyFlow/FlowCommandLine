@@ -183,6 +183,44 @@ namespace FlowCommandLineTests {
             Assert.True ( isCorrect );
         }
 
+        public record RunCommand_NotSuccess_RequiredField_Class {
+            public string Parameter1 { get; set; } = "";
+        }
+
+        [Fact]
+        public void RunCommand_NotSuccess_RequiredField () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            var isCorrect = true;
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand (
+                    "test",
+                    ( RunCommand_NotSuccess_RequiredField_Class arg ) => {
+                        isCorrect = false;
+                    },
+                    "",
+                    new List<FlowCommandParameter> {
+                        new FlowCommandParameter { FullName = "Parameter1", Description = "Description", Required = true }
+                    }
+                )
+                .RunCommand ();
+
+            //assert
+            Assert.True ( isCorrect );
+            Assert.Equal ( "Not all required parameters is defined!", messages.First () );
+            Assert.Equal ( " ", messages.ElementAt ( 1 ) );
+            Assert.Equal ( "The following parameters are available:", messages.ElementAt ( 2 ) );
+            Assert.Equal ( "  --Parameter1 Description", messages.ElementAt ( 3 ) );
+        }
+
     }
 
 }

@@ -7,13 +7,13 @@ namespace FlowCommandLine {
 
         public List<FlowCommandParameter> Parameters { get; init; } = new List<FlowCommandParameter> ();
 
-        public T MapParametersToType ( Dictionary<string, string> values ) {
+        public T MapParametersToType ( Dictionary<string, string> values, ICommandLineProvider commandLineProvider ) {
             var result = new T ();
 
             var properties = result
                 .GetType ()
                 .GetProperties ( BindingFlags.Public | BindingFlags.Instance );
-            var parameters = ParametersToDictionary ();
+            var parameters = FlowPropertyMapper.ParametersToDictionary ( Parameters );
 
             var processedParameters = new HashSet<FlowCommandParameter> ();
 
@@ -28,20 +28,8 @@ namespace FlowCommandLine {
 
             var requiredParameters = Parameters.Where ( a => a.Required ).ToList ();
             if ( requiredParameters.Intersect ( processedParameters ).Count () != requiredParameters.Count ) {
-                Console.WriteLine ( "Not all required options is defined!" );
+                commandLineProvider.WriteLine ( "Not all required options is defined!" );
                 throw new Exception ( "Not all required options is defined!" );
-            }
-
-            return result;
-        }
-
-        private Dictionary<string, FlowCommandParameter> ParametersToDictionary () {
-            var result = new Dictionary<string, FlowCommandParameter> ();
-
-            foreach ( var parameter in Parameters ) {
-                if ( !string.IsNullOrEmpty ( parameter.PropertyName ) ) result.Add ( parameter.PropertyName.ToLowerInvariant (), parameter );
-                if ( !string.IsNullOrEmpty ( parameter.FullName ) ) result.Add ( parameter.FullName.ToLowerInvariant (), parameter );
-                if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) result.Add ( parameter.ShortName.ToLowerInvariant (), parameter );
             }
 
             return result;

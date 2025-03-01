@@ -107,10 +107,10 @@ namespace FlowCommandLine {
 
             try {
                 if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                    flowCommand.Execute ( parameters );
+                    flowCommand.Execute ( parameters, m_commandLineProvider );
                     return Task.CompletedTask;
                 }
-                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute ( parameters );
+                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute ( parameters, m_commandLineProvider );
             } catch {
             }
 
@@ -139,7 +139,7 @@ namespace FlowCommandLine {
 
             try {
                 if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                    flowCommand.Execute ( parameters );
+                    flowCommand.Execute ( parameters, m_commandLineProvider );
                     return;
                 }
             } catch {
@@ -182,12 +182,14 @@ namespace FlowCommandLine {
             var flowOptions = new FlowOptions<T> {
                 Parameters = m_options
             };
-            return flowOptions.MapParametersToType ( parameters );
+            return flowOptions.MapParametersToType ( parameters, m_commandLineProvider );
         }
 
         private void ShowCommandHelp ( string description, List<FlowCommandParameter> parameters ) {
-            m_commandLineProvider.WriteLine ( description );
-            m_commandLineProvider.WriteLine ( " " );
+            if ( !string.IsNullOrEmpty ( description ) ) {
+                m_commandLineProvider.WriteLine ( description );
+                m_commandLineProvider.WriteLine ( " " );
+            }
             ShowParameters ( parameters );
         }
 
