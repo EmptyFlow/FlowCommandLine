@@ -2,7 +2,7 @@
   "profiles": {
     "ExampleApp": {
       "commandName": "Project",
-      "commandLineArgs": "pizda -borozda=1212 \"-pizda=1212\" -laperzda"
+      "commandLineArgs": "testcommand --param1=argus --param2=234"
     }
   }
 }

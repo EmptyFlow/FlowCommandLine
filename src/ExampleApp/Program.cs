@@ -24,7 +24,6 @@ await CommandLine.Console ()
     )
     .RunCommandAsync ();
 
-
 public class Test {
     public string Param1 { get; set; } = "";
     public int Param2 { get; set; }

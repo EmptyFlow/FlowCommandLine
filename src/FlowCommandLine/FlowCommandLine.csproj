@@ -5,6 +5,28 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<NativeAot>enable</NativeAot>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>Command line parser</Title>
+		<Company>EmptyFlow</Company>
+		<Copyright>Copyright (c) Roman Vladimirov</Copyright>
+		<Description>Command line parser supported two mode: command-based (like git commit ...) and options-only. It can be parsed to you class model. Supported compilation in NativeAot.</Description>
+		<PackageProjectUrl>https://github.com/EmptyFlow/FlowCommandLine</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/EmptyFlow/FlowCommandLine</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>command,line,commandline,command-line,parse,parser,parsing,shell</PackageTags>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\..\LICENSE">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	  <None Include="..\..\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
 
 </Project>
