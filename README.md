@@ -45,7 +45,7 @@ CommandLine.Console ()
 ## Parameters-only mode
 
 Example command line:  
-`--param1=stringvalue --param2=120`
+`myconapp --param1=stringvalue --param2=120`
 
 ```csharp
 var options = CommandLine.Console ()
