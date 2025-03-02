@@ -17,10 +17,10 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Restore dependencies
-      run: dotnet restore src/FlowCommandLine/FlowCommandLine.csproj
+      run: dotnet restore src/FlowCommandLine/FlowCommandLine.sln
     - name: Build
-      run: dotnet build --configuration Release src/FlowCommandLine/FlowCommandLine.csproj
+      run: dotnet build --configuration Release src/FlowCommandLine/FlowCommandLine.sln
     - name: Tests
-      run: dotnet test --configuration Release --no-build src/FlowCommandLine/FlowCommandLine.csproj
+      run: dotnet test --configuration Release src/FlowCommandLine/FlowCommandLine.sln
     - name: Pack package
       run: dotnet pack --configuration Release --no-build --output . src/FlowCommandLine/FlowCommandLine.csproj
