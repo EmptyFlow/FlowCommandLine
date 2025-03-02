@@ -257,6 +257,98 @@ namespace FlowCommandLineTests {
             Assert.True ( isCorrect );
         }
 
+        public record RunCommand_Success_DateOnlyTimeSpan_Class {
+            public DateOnly Parameter1 { get; set; }
+            public DateTime Parameter2 { get; set; }
+            public TimeSpan Parameter3 { get; set; }
+        }
+
+        [Fact]
+        public void RunCommand_Success_DateOnlyTimeSpan () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test --parameter1=2025-02-04 --parameter2=2025-02-04T12:35:20 --parameter3=18:10:20" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            var isCorrect = true;
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand (
+                    "test",
+                    ( RunCommand_Success_DateOnlyTimeSpan_Class arg ) => {
+                        isCorrect = arg.Parameter1 == new DateOnly ( 2025, 2, 4 ) &&
+                            arg.Parameter2 == new DateTime ( 2025, 2, 4, 12, 35, 20 ) &&
+                            arg.Parameter3 == new TimeSpan ( 18, 10, 20 );
+                    },
+                    "",
+                    new List<FlowCommandParameter> {
+                        new FlowCommandParameter { FullName = "Parameter1" },
+                        new FlowCommandParameter { FullName = "Parameter2" },
+                        new FlowCommandParameter { FullName = "Parameter3" }
+                    }
+                )
+                .RunCommand ();
+
+            //assert
+            Assert.True ( isCorrect );
+        }
+
+        public record RunOptions_Success_SingleParameter_Class {
+            public string Parameter1 { get; set; } = "";
+        }
+
+        [Fact]
+        public void RunOptions_Success_SingleParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test --parameter1=blablabla" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption(fullName: "Parameter1")
+                .RunOptions<RunOptions_Success_SingleParameter_Class> ();
+
+            //assert
+            Assert.Equal ( "blablabla", result.Parameter1 );
+        }
+
+        public record RunOptions_Success_FewParameters_Class {
+            public string Parameter1 { get; set; } = "";
+            public string Parameter2 { get; set; } = "";
+            public int Parameter3 { get; set; }
+        }
+
+        [Fact]
+        public void RunOptions_Success_FewParameters () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test --parameter1=blablabla --parameter2=\"pirdesh\" --parameter3=144" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_FewParameters_Class> ();
+
+            //assert
+            Assert.Equal ( "blablabla", result.Parameter1 );
+            Assert.Equal ( "pirdesh", result.Parameter2 );
+            Assert.Equal ( 144, result.Parameter3 );
+        }
+
     }
 
 }
