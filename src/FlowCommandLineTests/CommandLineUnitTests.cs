@@ -317,7 +317,7 @@ namespace FlowCommandLineTests {
                 .RunOptions<RunOptions_Success_SingleParameter_Class> ();
 
             //assert
-            Assert.Equal ( "blablabla", result.Parameter1 );
+            Assert.Equal ( "blablabla", result?.Parameter1 ?? null );
         }
 
         public record RunOptions_Success_FewParameters_Class {
@@ -344,9 +344,9 @@ namespace FlowCommandLineTests {
                 .RunOptions<RunOptions_Success_FewParameters_Class> ();
 
             //assert
-            Assert.Equal ( "blablabla", result.Parameter1 );
-            Assert.Equal ( "pirdesh", result.Parameter2 );
-            Assert.Equal ( 144, result.Parameter3 );
+            Assert.Equal ( "blablabla", result?.Parameter1 ?? null );
+            Assert.Equal ( "pirdesh", result?.Parameter2 ?? null );
+            Assert.Equal ( 144, result?.Parameter3 ?? null );
         }
 
     }
