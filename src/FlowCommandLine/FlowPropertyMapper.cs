@@ -52,6 +52,24 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( DateOnly ):
+                    if ( values.ContainsKey ( parameterKey ) && DateOnly.TryParse ( values[parameterKey], CultureInfo.InvariantCulture, out var dateOnlyvalue ) ) {
+                        property.SetValue ( model, dateOnlyvalue );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( DateTime ):
+                    if ( values.ContainsKey ( parameterKey ) && DateTime.TryParse ( values[parameterKey], CultureInfo.InvariantCulture, out var dateTimevalue ) ) {
+                        property.SetValue ( model, dateTimevalue );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( TimeSpan ):
+                    if ( values.ContainsKey ( parameterKey ) && TimeSpan.TryParse ( values[parameterKey], CultureInfo.InvariantCulture, out var timeSpanValue ) ) {
+                        property.SetValue ( model, timeSpanValue );
+                        isChanged = true;
+                    }
+                    break;
                 case Type _ when type == typeof ( string ):
                     if ( values.ContainsKey ( parameterKey ) ) {
                         property.SetValue ( model, values[parameterKey] );

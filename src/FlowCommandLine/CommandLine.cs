@@ -300,8 +300,6 @@ namespace FlowCommandLine {
             foreach ( var character in m_commandLine ) {
                 if ( character == '"' && !quoteStarted ) {
                     quoteStarted = true;
-                    result.Add ( currentPart.ToString () );
-                    currentPart.Clear ();
                     continue;
                 }
                 if ( character == ' ' && !quoteStarted ) {

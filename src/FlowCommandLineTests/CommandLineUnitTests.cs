@@ -221,6 +221,42 @@ namespace FlowCommandLineTests {
             Assert.Equal ( "  --Parameter1 Description", messages.ElementAt ( 3 ) );
         }
 
+        public record RunCommand_Success_QuotedParameters_Class {
+            public string Parameter1 { get; set; } = "";
+            public string Parameter2 { get; set; } = "";
+        }
+
+        [Fact]
+        public void RunCommand_Success_QuotedParameters () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test --parameter1=\"Test string in quote\" --parameter2=\"Second string in quote\"" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            var isCorrect = true;
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand (
+                    "test",
+                    ( RunCommand_Success_QuotedParameters_Class arg ) => {
+                        isCorrect = arg.Parameter1 == "Test string in quote" && arg.Parameter2 == "Second string in quote";
+                    },
+                    "",
+                    new List<FlowCommandParameter> {
+                        new FlowCommandParameter { FullName = "Parameter1" },
+                        new FlowCommandParameter { FullName = "Parameter2" }
+                    }
+                )
+                .RunCommand ();
+
+            //assert
+            Assert.True ( isCorrect );
+        }
+
     }
 
 }
