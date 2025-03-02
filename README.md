@@ -5,6 +5,10 @@ Model parameters mapped types is supported: int, long, double, float, string, Da
 By default, the output will be to the system console, but can be redefined to any of your case - instead `CommandLine.Console ()` you can use `new CommandLine (new MyConsoleCommandLineProvider())` where `MyConsoleCommandLineProvider` it is you class which is implement `ICommandLineProvider` interface.
 
 ## Command-based mode
+
+Example command line:  
+`myconapp runapp --param1=stringvalue --param2=120`
+
 ```csharp
 public class Test {
     public string Param1 { get; set; } = "";
@@ -39,6 +43,10 @@ CommandLine.Console ()
 ```
 
 ## Parameters-only mode
+
+Example command line:  
+`--param1=stringvalue --param2=120`
+
 ```csharp
 var options = CommandLine.Console ()
     .Application ( "My Console App", "1.0.0", "full description.", "Copyright My Super Corporation", "myconapp" )
