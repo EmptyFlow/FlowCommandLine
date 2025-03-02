@@ -21,6 +21,6 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release src/FlowCommandLine/FlowCommandLine.csproj
     - name: Tests
-      run: dotnet test --configuration Release --no-build src/FlowCommandLine/FlowCommandLine.csproj
+      run: dotnet test --configuration Release
     - name: Pack package
       run: dotnet pack --configuration Release --no-build --output . src/FlowCommandLine/FlowCommandLine.csproj
