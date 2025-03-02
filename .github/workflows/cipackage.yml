@@ -1,0 +1,26 @@
+name: CI and Build Package
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:       
+  windows64:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore src/FlowCommandLine/FlowCommandLine.csproj
+    - name: Build
+      run: dotnet build --configuration Release src/FlowCommandLine/FlowCommandLine.csproj
+    - name: Tests
+      run: dotnet test --configuration Release --no-build src/FlowCommandLine/FlowCommandLine.csproj
+    - name: Pack package
+      run: dotnet pack --configuration Release --no-build --output . src/FlowCommandLine/FlowCommandLine.csproj
