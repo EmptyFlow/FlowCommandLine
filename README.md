@@ -1,4 +1,4 @@
-[![nugeticon](https://img.shields.io/badge/nuget-available-blue)](https://www.nuget.org/packages/FlowCommandLine)
+[![CI](https://github.com/EmptyFlow/FlowCommandLine/actions/workflows/cipackage.yml/badge.svg)](https://github.com/EmptyFlow/FlowCommandLine/actions/workflows/cipackage.yml) [![nugeticon](https://img.shields.io/badge/nuget-available-blue)](https://www.nuget.org/packages/FlowCommandLine)
 
 # FlowCommandLine
 A fast and simple command line parser that works in two modes: command-based (e.g. `git commit ...`) or parameters-only. Parsing can be happened to any model class or record with parameterless constructor.
