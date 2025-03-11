@@ -7,7 +7,7 @@ namespace FlowCommandLine {
 
         public static PropertyInfo? GetPropertyFromParameter ( FlowCommandParameter parameter, IEnumerable<PropertyInfo> properties ) {
             if ( !string.IsNullOrEmpty ( parameter.PropertyName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.PropertyName.ToLowerInvariant () );
-            if ( !string.IsNullOrEmpty ( parameter.FullName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.FullName.ToLowerInvariant() );
+            if ( !string.IsNullOrEmpty ( parameter.FullName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.FullName.ToLowerInvariant () );
             if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) return properties.FirstOrDefault ( a => a.Name.ToLowerInvariant () == parameter.ShortName.ToLowerInvariant () );
 
             return null;
@@ -34,9 +34,41 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( IEnumerable<int> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapIntegerCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( List<int> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapIntegerCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
                 case Type _ when type == typeof ( long ):
                     if ( values.ContainsKey ( parameterKey ) && long.TryParse ( values[parameterKey], out var int64value ) ) {
                         property.SetValue ( model, int64value );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( IEnumerable<long> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        var longValues = values[parameterKey]
+                            .Split ( "," )
+                            .Select (
+                                a => {
+                                    if ( long.TryParse ( values[parameterKey], out var int64value ) ) {
+                                        return (long?) int64value;
+                                    } else {
+                                        return null;
+                                    }
+                                }
+                            )
+                            .Where ( a => a != null )
+                            .ToList ();
+
+                        property.SetValue ( model, longValues );
                         isChanged = true;
                     }
                     break;
@@ -84,6 +116,22 @@ namespace FlowCommandLine {
             return isChanged;
         }
 
+        private static List<int> MapIntegerCollections ( Dictionary<string, string> values, string parameterKey ) {
+            return values[parameterKey]
+                                        .Split ( "," )
+                                        .Select (
+                                            a => {
+                                                if ( int.TryParse ( a, out var int32value ) ) {
+                                                    return (int?) int32value;
+                                                } else {
+                                                    return null;
+                                                }
+                                            }
+                                        )
+                                        .Where ( a => a != null )
+                                        .Select ( a => a.Value )
+                                        .ToList ();
+        }
     }
 
 }
