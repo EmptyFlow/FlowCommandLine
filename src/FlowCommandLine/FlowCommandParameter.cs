@@ -15,6 +15,26 @@
 
         public bool Required { get; init; }
 
+        public static FlowCommandParameter Create ( string name = "", string alias = "", string description = "", string property = "" ) {
+            return new FlowCommandParameter {
+                FullName = alias,
+                ShortName = name,
+                Description = description,
+                PropertyName = property,
+                Required = false
+            };
+        }
+
+        public static FlowCommandParameter CreateRequired ( string name = "", string alias = "", string description = "", string property = "" ) {
+            return new FlowCommandParameter {
+                FullName = alias,
+                ShortName = name,
+                Description = description,
+                PropertyName = property,
+                Required = true
+            };
+        }
+
     }
 
 }

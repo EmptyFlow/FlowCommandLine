@@ -10,16 +10,8 @@ await CommandLine.Console ()
         },
         "Command description",
         new List<FlowCommandParameter> {
-            new FlowCommandParameter {
-                FullName = "param1",
-                Description = "parameter description",
-                Required = true,
-            },
-            new FlowCommandParameter {
-                FullName = "param2",
-                Description = "parameter2 description",
-                Required = false,
-            }
+            FlowCommandParameter.CreateRequired(alias: "param1", description: "parameter description"),
+            FlowCommandParameter.Create(alias: "param2", description: "parameter2 description"),
         }
     )
     .RunCommandAsync ();
