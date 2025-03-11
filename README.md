@@ -1,3 +1,5 @@
+[![nugeticon](https://img.shields.io/badge/nuget-available-blue)](https://www.nuget.org/packages/FlowCommandLine)
+
 # FlowCommandLine
 A fast and simple command line parser that works in two modes: command-based (e.g. `git commit ...`) or parameters-only. Parsing can be happened to any model class or record with parameterless constructor.
 It support modern dotnet core runtimes (net8+), compilation in NativeAot. It supported auto documentation for commands and parameters.
