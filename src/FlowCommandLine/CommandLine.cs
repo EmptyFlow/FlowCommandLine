@@ -68,7 +68,9 @@ namespace FlowCommandLine {
                 Delegate = @delegate,
                 Description = description,
                 Parameters = parameters
-                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) )
+                    .Where (
+                        a => a != null && ( !string.IsNullOrEmpty ( a.FullName ) || !string.IsNullOrEmpty ( a.ShortName ) )
+                    )
                     .ToList ()
             };
 

@@ -15,21 +15,21 @@
 
         public bool Required { get; init; }
 
-        public static FlowCommandParameter Create ( string name = "", string alias = "", string description = "", string property = "" ) {
+        public static FlowCommandParameter Create ( string name = "", string alias = "", string help = "", string property = "" ) {
             return new FlowCommandParameter {
                 FullName = alias,
                 ShortName = name,
-                Description = description,
+                Description = help,
                 PropertyName = property,
                 Required = false
             };
         }
 
-        public static FlowCommandParameter CreateRequired ( string name = "", string alias = "", string description = "", string property = "" ) {
+        public static FlowCommandParameter CreateRequired ( string name = "", string alias = "", string help = "", string property = "" ) {
             return new FlowCommandParameter {
                 FullName = alias,
                 ShortName = name,
-                Description = description,
+                Description = help,
                 PropertyName = property,
                 Required = true
             };

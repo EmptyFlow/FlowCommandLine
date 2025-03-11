@@ -10,8 +10,8 @@ await CommandLine.Console ()
         },
         "Command description",
         new List<FlowCommandParameter> {
-            FlowCommandParameter.CreateRequired(alias: "param1", description: "parameter description"),
-            FlowCommandParameter.Create(alias: "param2", description: "parameter2 description"),
+            FlowCommandParameter.CreateRequired(alias: "param1", help: "parameter description"),
+            FlowCommandParameter.Create(alias: "param2", help: "parameter2 description"),
         }
     )
     .RunCommandAsync ();
