@@ -54,21 +54,13 @@ namespace FlowCommandLine {
                     break;
                 case Type _ when type == typeof ( IEnumerable<long> ):
                     if ( values.ContainsKey ( parameterKey ) ) {
-                        var longValues = values[parameterKey]
-                            .Split ( "," )
-                            .Select (
-                                a => {
-                                    if ( long.TryParse ( values[parameterKey], out var int64value ) ) {
-                                        return (long?) int64value;
-                                    } else {
-                                        return null;
-                                    }
-                                }
-                            )
-                            .Where ( a => a != null )
-                            .ToList ();
-
-                        property.SetValue ( model, longValues );
+                        property.SetValue ( model, MapLongCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( List<long> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapLongCollections ( values, parameterKey ) );
                         isChanged = true;
                     }
                     break;
@@ -118,20 +110,38 @@ namespace FlowCommandLine {
 
         private static List<int> MapIntegerCollections ( Dictionary<string, string> values, string parameterKey ) {
             return values[parameterKey]
-                                        .Split ( "," )
-                                        .Select (
-                                            a => {
-                                                if ( int.TryParse ( a, out var int32value ) ) {
-                                                    return (int?) int32value;
-                                                } else {
-                                                    return null;
-                                                }
-                                            }
-                                        )
-                                        .Where ( a => a != null )
-                                        .Select ( a => a.Value )
-                                        .ToList ();
+                .Split ( "," )
+                .Select (
+                    a => {
+                        if ( int.TryParse ( a, out var int32value ) ) {
+                            return (int?) int32value;
+                        } else {
+                            return null;
+                        }
+                    }
+                )
+                .Where ( a => a != null )
+                .Select ( a => a!.Value )
+                .ToList ();
         }
+
+        private static List<long> MapLongCollections ( Dictionary<string, string> values, string parameterKey ) {
+            return values[parameterKey]
+                .Split ( "," )
+                .Select (
+                    a => {
+                        if ( long.TryParse ( a, out var int32value ) ) {
+                            return (long?) int32value;
+                        } else {
+                            return null;
+                        }
+                    }
+                )
+                .Where ( a => a != null )
+                .Select ( a => a!.Value )
+                .ToList ();
+        }
+
     }
 
 }

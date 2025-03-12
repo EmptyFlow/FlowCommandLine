@@ -313,7 +313,7 @@ namespace FlowCommandLineTests {
             //act
             var result = commandLine
                 .Application ( "TestApplication", "1.0.0" )
-                .AddOption(fullName: "Parameter1")
+                .AddOption ( fullName: "Parameter1" )
                 .RunOptions<RunOptions_Success_SingleParameter_Class> ();
 
             //assert
@@ -347,6 +347,186 @@ namespace FlowCommandLineTests {
             Assert.Equal ( "blablabla", result?.Parameter1 ?? null );
             Assert.Equal ( "pirdesh", result?.Parameter2 ?? null );
             Assert.Equal ( 144, result?.Parameter3 ?? null );
+        }
+
+        public record RunOptions_Success_IntParameter_Class {
+            public int Parameter1 { get; set; }
+            public int Parameter2 { get; set; }
+            public int Parameter3 { get; set; }
+        }
+
+        [Fact]
+        public void RunOptions_Success_IntParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1 --parameter2=100000 --parameter3=1212121212" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_IntParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 1, result.Parameter1 );
+            Assert.Equal ( 100000, result.Parameter2 );
+            Assert.Equal ( 1212121212, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_IEnumerableIntParameter_Class {
+            public IEnumerable<int> Parameter1 { get; set; } = Enumerable.Empty<int> ();
+            public IEnumerable<int> Parameter2 { get; set; } = Enumerable.Empty<int> ();
+            public IEnumerable<int> Parameter3 { get; set; } = Enumerable.Empty<int> ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_IEnumerableIntParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1,2,3,4 --parameter2=8124343,2374234,123412,23423423,8124343,2374234,123412,23423423 --parameter3=100,100,100,100,100,100" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_IEnumerableIntParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<int> { 1, 2, 3, 4 }, result.Parameter1 );
+            Assert.Equal ( new List<int> { 8124343, 2374234, 123412, 23423423, 8124343, 2374234, 123412, 23423423 }, result.Parameter2 );
+            Assert.Equal ( new List<int> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_ListIntParameter_Class {
+            public List<int> Parameter1 { get; set; } = Enumerable.Empty<int> ().ToList();
+            public List<int> Parameter2 { get; set; } = Enumerable.Empty<int> ().ToList ();
+            public List<int> Parameter3 { get; set; } = Enumerable.Empty<int> ().ToList ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_ListIntParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1,2,3,4 --parameter2=8124343,2374234,123412,23423423,8124343,2374234,123412,23423423 --parameter3=100,100,100,100,100,100" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_ListIntParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<int> { 1, 2, 3, 4 }, result.Parameter1 );
+            Assert.Equal ( new List<int> { 8124343, 2374234, 123412, 23423423, 8124343, 2374234, 123412, 23423423 }, result.Parameter2 );
+            Assert.Equal ( new List<int> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_LongParameter_Class {
+            public long Parameter1 { get; set; }
+            public long Parameter2 { get; set; }
+            public long Parameter3 { get; set; }
+        }
+
+        [Fact]
+        public void RunOptions_Success_LongParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1 --parameter2=10000000000 --parameter3=121212345231212" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_LongParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 1, result.Parameter1 );
+            Assert.Equal ( 10000000000, result.Parameter2 );
+            Assert.Equal ( 121212345231212, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_IEnumerableLongParameter_Class {
+            public IEnumerable<long> Parameter1 { get; set; } = Enumerable.Empty<long> ();
+            public IEnumerable<long> Parameter2 { get; set; } = Enumerable.Empty<long> ();
+            public IEnumerable<long> Parameter3 { get; set; } = Enumerable.Empty<long> ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_IEnumerableLongParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1,2,3,4 --parameter2=8124343,2374234,123412,23423423,8124343,2374234,123412,23423423 --parameter3=100,100,100,100,100,100" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_IEnumerableLongParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<long> { 1, 2, 3, 4 }, result.Parameter1 );
+            Assert.Equal ( new List<long> { 8124343, 2374234, 123412, 23423423, 8124343, 2374234, 123412, 23423423 }, result.Parameter2 );
+            Assert.Equal ( new List<long> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_ListLongParameter_Class {
+            public List<long> Parameter1 { get; set; } = Enumerable.Empty<long> ().ToList ();
+            public List<long> Parameter2 { get; set; } = Enumerable.Empty<long> ().ToList ();
+            public List<long> Parameter3 { get; set; } = Enumerable.Empty<long> ().ToList ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_ListLongParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1,2,3,4 --parameter2=8124343345345,23742343243,123412345345,23423423345345,814564624343,2374234,123415465642,23423456456423 --parameter3=100,100,100,100,100,100" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_ListLongParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<long> { 1, 2, 3, 4 }, result.Parameter1 );
+            Assert.Equal ( new List<long> { 8124343345345, 23742343243, 123412345345, 23423423345345, 814564624343, 2374234, 123415465642, 23423456456423 }, result.Parameter2 );
+            Assert.Equal ( new List<long> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
         }
 
     }
