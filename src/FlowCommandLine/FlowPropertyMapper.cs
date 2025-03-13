@@ -70,6 +70,18 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( IEnumerable<double> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapDoubleCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( List<double> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapDoubleCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
                 case Type _ when type == typeof ( float ):
                     if ( values.ContainsKey ( parameterKey ) && float.TryParse ( values[parameterKey], CultureInfo.InvariantCulture, out var floatvalue ) ) {
                         property.SetValue ( model, floatvalue );
@@ -132,6 +144,23 @@ namespace FlowCommandLine {
                     a => {
                         if ( long.TryParse ( a, out var int32value ) ) {
                             return (long?) int32value;
+                        } else {
+                            return null;
+                        }
+                    }
+                )
+                .Where ( a => a != null )
+                .Select ( a => a!.Value )
+                .ToList ();
+        }
+
+        private static List<double> MapDoubleCollections ( Dictionary<string, string> values, string parameterKey ) {
+            return values[parameterKey]
+                .Split ( "," )
+                .Select (
+                    a => {
+                        if ( double.TryParse ( a, CultureInfo.InvariantCulture, out var doublevalue ) ) {
+                            return (double?) doublevalue;
                         } else {
                             return null;
                         }

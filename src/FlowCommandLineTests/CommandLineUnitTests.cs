@@ -529,6 +529,96 @@ namespace FlowCommandLineTests {
             Assert.Equal ( new List<long> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
         }
 
+        public record RunOptions_Success_DoubleParameter_Class {
+            public double Parameter1 { get; set; }
+            public double Parameter2 { get; set; }
+            public double Parameter3 { get; set; }
+        }
+
+        [Fact]
+        public void RunOptions_Success_DoubleParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=0.10 --parameter2=000000000.35 --parameter3=3333.33333333" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_DoubleParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 0.10, result.Parameter1 );
+            Assert.Equal ( 000000000.35, result.Parameter2 );
+            Assert.Equal ( 3333.33333333, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_IEnumerableDoubleParameter_Class {
+            public IEnumerable<double> Parameter1 { get; set; } = Enumerable.Empty<double> ();
+            public IEnumerable<double> Parameter2 { get; set; } = Enumerable.Empty<double> ();
+            public IEnumerable<double> Parameter3 { get; set; } = Enumerable.Empty<double> ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_IEnumerableDoubleParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=0.1,0.2,0.3,0.4 --parameter2=8124.343,2374.234,1.23412,23423.423,81.24343,23742.34,123.412,2342.3423 --parameter3=100.0,100.01,100.02,100.03,100.04,100.05" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_IEnumerableDoubleParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<double> { 0.1, 0.2, 0.3, 0.4 }, result.Parameter1 );
+            Assert.Equal ( new List<double> { 8124.343, 2374.234, 1.23412, 23423.423, 81.24343, 23742.34, 123.412, 2342.3423 }, result.Parameter2 );
+            Assert.Equal ( new List<double> { 100.0, 100.01, 100.02, 100.03, 100.04, 100.05 }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_ListDoubleParameter_Class {
+            public List<double> Parameter1 { get; set; } = Enumerable.Empty<double> ().ToList ();
+            public List<double> Parameter2 { get; set; } = Enumerable.Empty<double> ().ToList ();
+            public List<double> Parameter3 { get; set; } = Enumerable.Empty<double> ().ToList ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_ListDoubleParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=0.1,0.2,0.3,0.4 --parameter2=812434.3345345,23742.343243,12.3412345345,23423.423345345,8145646.24343,2374.234,12341.5465642,234234.56456423 --parameter3=100.0,100.1,100.2,100.3,100.4,100.5" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_ListDoubleParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<double> { 0.1, 0.2, 0.3, 0.4 }, result.Parameter1 );
+            Assert.Equal ( new List<double> { 812434.3345345, 23742.343243, 12.3412345345, 23423.423345345, 8145646.24343, 2374.234, 12341.5465642, 234234.56456423 }, result.Parameter2 );
+            Assert.Equal ( new List<double> { 100.0, 100.1, 100.2, 100.3, 100.4, 100.5 }, result.Parameter3 );
+        }
+
     }
 
 }
