@@ -619,6 +619,97 @@ namespace FlowCommandLineTests {
             Assert.Equal ( new List<double> { 100.0, 100.1, 100.2, 100.3, 100.4, 100.5 }, result.Parameter3 );
         }
 
+        public record RunOptions_Success_FloatParameter_Class {
+            public float Parameter1 { get; set; }
+            public float Parameter2 { get; set; }
+            public float Parameter3 { get; set; }
+        }
+
+        [Fact]
+        public void RunOptions_Success_FloatParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=0.10 --parameter2=000000000.35 --parameter3=3333.33333333" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_FloatParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 0.10f, result.Parameter1 );
+            Assert.Equal ( 000000000.35f, result.Parameter2 );
+            Assert.Equal ( 3333.33333333f, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_IEnumerableFloatParameter_Class {
+            public IEnumerable<float> Parameter1 { get; set; } = Enumerable.Empty<float> ();
+            public IEnumerable<float> Parameter2 { get; set; } = Enumerable.Empty<float> ();
+            public IEnumerable<float> Parameter3 { get; set; } = Enumerable.Empty<float> ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_IEnumerableFloatParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=0.1,0.2,0.3,0.4 --parameter2=8124.343,2374.234,1.23412,23423.423,81.24343,23742.34,123.412,2342.3423 --parameter3=100.0,100.01,100.02,100.03,100.04,100.05" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_IEnumerableFloatParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<float> { 0.1f, 0.2f, 0.3f, 0.4f }, result.Parameter1 );
+            Assert.Equal ( new List<float> { 8124.343f, 2374.234f, 1.23412f, 23423.423f, 81.24343f, 23742.34f, 123.412f, 2342.3423f }, result.Parameter2 );
+            Assert.Equal ( new List<float> { 100.0f, 100.01f, 100.02f, 100.03f, 100.04f, 100.05f }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_ListFloatParameter_Class {
+            public List<float> Parameter1 { get; set; } = Enumerable.Empty<float> ().ToList ();
+            public List<float> Parameter2 { get; set; } = Enumerable.Empty<float> ().ToList ();
+            public List<float> Parameter3 { get; set; } = Enumerable.Empty<float> ().ToList ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_ListFloatParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=0.1,0.2,0.3,0.4 --parameter2=812434.3345345,23742.343243,12.3412345345,23423.423345345,8145646.24343,2374.234,12341.5465642,234234.56456423 --parameter3=100.0,100.1,100.2,100.3,100.4,100.5" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_ListFloatParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<float> { 0.1f, 0.2f, 0.3f, 0.4f }, result.Parameter1 );
+            Assert.Equal ( new List<float> { 812434.3345345f, 23742.343243f, 12.3412345345f, 23423.423345345f, 8145646.24343f, 2374.234f, 12341.5465642f, 234234.56456423f }, result.Parameter2 );
+            Assert.Equal ( new List<float> { 100.0f, 100.1f, 100.2f, 100.3f, 100.4f, 100.5f }, result.Parameter3 );
+        }
+
+
     }
 
 }

@@ -88,6 +88,18 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( IEnumerable<float> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapFloatCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( List<float> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapFloatCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
                 case Type _ when type == typeof ( DateOnly ):
                     if ( values.ContainsKey ( parameterKey ) && DateOnly.TryParse ( values[parameterKey], CultureInfo.InvariantCulture, out var dateOnlyvalue ) ) {
                         property.SetValue ( model, dateOnlyvalue );
@@ -161,6 +173,23 @@ namespace FlowCommandLine {
                     a => {
                         if ( double.TryParse ( a, CultureInfo.InvariantCulture, out var doublevalue ) ) {
                             return (double?) doublevalue;
+                        } else {
+                            return null;
+                        }
+                    }
+                )
+                .Where ( a => a != null )
+                .Select ( a => a!.Value )
+                .ToList ();
+        }
+
+        private static List<float> MapFloatCollections ( Dictionary<string, string> values, string parameterKey ) {
+            return values[parameterKey]
+                .Split ( "," )
+                .Select (
+                    a => {
+                        if ( float.TryParse ( a, CultureInfo.InvariantCulture, out var floatValue ) ) {
+                            return (float?) floatValue;
                         } else {
                             return null;
                         }

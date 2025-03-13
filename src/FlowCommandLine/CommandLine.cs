@@ -298,22 +298,29 @@ namespace FlowCommandLine {
         private List<string> GetParts () {
             var result = new List<string> ();
             var currentPart = new StringBuilder ();
-            var quoteStarted = false;
+            var parameterStarted = false;
+            char? previousCharacter = null;
+            int currentIndex = -1;
             foreach ( var character in m_commandLine ) {
-                if ( character == '"' && !quoteStarted ) {
-                    quoteStarted = true;
-                    continue;
-                }
-                if ( character == ' ' && !quoteStarted ) {
+                if ( currentIndex > -1 ) previousCharacter = m_commandLine[currentIndex];
+                currentIndex++;
+
+                if ( character == '"' && parameterStarted ) continue; // don't fill quotes to result
+
+                if ( character == ' ' && !parameterStarted ) {
                     result.Add ( currentPart.ToString () );
                     currentPart.Clear ();
                     continue;
                 }
-                if ( character == '"' && quoteStarted ) {
-                    quoteStarted = false;
+                if ( character == '-' && previousCharacter == ' ' && !parameterStarted ) {
+                    parameterStarted = true;
                     result.Add ( currentPart.ToString () );
                     currentPart.Clear ();
-                    continue;
+                }
+                if ( character == '-' && previousCharacter == ' ' && parameterStarted && currentPart.Length > 2 ) {
+                    parameterStarted = true;
+                    result.Add ( currentPart.ToString () );
+                    currentPart.Clear ();
                 }
 
                 currentPart.Append ( character );
@@ -322,6 +329,7 @@ namespace FlowCommandLine {
             if ( currentPart.Length > 0 ) result.Add ( currentPart.ToString () );
 
             return result
+                .Where ( a => !string.IsNullOrEmpty ( a ) )
                 .Select ( a => a.Trim () )
                 .ToList ();
         }
