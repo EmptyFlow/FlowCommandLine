@@ -3,7 +3,7 @@
 # FlowCommandLine
 A fast and simple command line parser that works in two modes: command-based (e.g. `git commit ...`) or parameters-only. Parsing can be happened to any model class or record with parameterless constructor.
 It support modern dotnet core runtimes (net8+), compilation in NativeAot. It supported auto documentation for commands and parameters.
-Model parameters mapped types is supported: int, long, double, float, string, DateOnly, DateTime, TimeSpan.
+Lot of types of properties [is supported](https://github.com/EmptyFlow/FlowCommandLine/wiki/Supported-mappings-types).
 By default, the output will be to the system console, but can be redefined to any of your case - instead `CommandLine.Console ()` you can use `new CommandLine (new MyConsoleCommandLineProvider())` where `MyConsoleCommandLineProvider` it is you class which is implement `ICommandLineProvider` interface.
 
 ## Command-based mode
