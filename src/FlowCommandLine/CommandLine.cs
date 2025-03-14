@@ -305,14 +305,12 @@ namespace FlowCommandLine {
                 if ( currentIndex > -1 ) previousCharacter = m_commandLine[currentIndex];
                 currentIndex++;
 
-                if ( character == '"' && parameterStarted ) continue; // don't fill quotes to result
-
                 if ( character == ' ' && !parameterStarted ) {
                     result.Add ( currentPart.ToString () );
                     currentPart.Clear ();
                     continue;
                 }
-                if ( character == '-' && previousCharacter == ' ' && !parameterStarted ) {
+                if ( character == '-' && (previousCharacter == ' ' || currentIndex == 0) && !parameterStarted ) {
                     parameterStarted = true;
                     result.Add ( currentPart.ToString () );
                     currentPart.Clear ();

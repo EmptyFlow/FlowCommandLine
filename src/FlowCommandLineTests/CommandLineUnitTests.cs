@@ -709,6 +709,95 @@ namespace FlowCommandLineTests {
             Assert.Equal ( new List<float> { 100.0f, 100.1f, 100.2f, 100.3f, 100.4f, 100.5f }, result.Parameter3 );
         }
 
+        public record RunOptions_Success_StringParameter_Class {
+            public string Parameter1 { get; set; } = "";
+            public string Parameter2 { get; set; } = "";
+            public string Parameter3 { get; set; } = "";
+        }
+
+        [Fact]
+        public void RunOptions_Success_StringParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=argus --parameter2=test values with spaces --parameter3=\"quotes string with spaces\"" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_StringParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( "argus", result.Parameter1 );
+            Assert.Equal ( "test values with spaces", result.Parameter2 );
+            Assert.Equal ( "quotes string with spaces", result.Parameter3 );
+        }
+
+        public record RunOptions_Success_IEnumerableStringParameter_Class {
+            public IEnumerable<string> Parameter1 { get; set; } = Enumerable.Empty<string> ();
+            public IEnumerable<string> Parameter2 { get; set; } = Enumerable.Empty<string> ();
+            public IEnumerable<string> Parameter3 { get; set; } = Enumerable.Empty<string> ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_IEnumerableStringParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=argus bargus margus --parameter2=test values with spaces --parameter3=first1212121 \"quotes string with spaces\" last4534534" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_IEnumerableStringParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<string> { "argus", "bargus", "margus" }, result.Parameter1 );
+            Assert.Equal ( new List<string> { "test", "values", "with", "spaces" }, result.Parameter2 );
+            Assert.Equal ( new List<string> { "first1212121", "quotes string with spaces", "last4534534" }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_ListStringParameter_Class {
+            public List<string> Parameter1 { get; set; } = Enumerable.Empty<string> ().ToList ();
+            public List<string> Parameter2 { get; set; } = Enumerable.Empty<string> ().ToList ();
+            public List<string> Parameter3 { get; set; } = Enumerable.Empty<string> ().ToList ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_ListStringParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=argus bargus margus --parameter2=test values with spaces --parameter3=first1212121 \"quotes string with spaces\" last4534534" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_ListStringParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<string> { "argus", "bargus", "margus" }, result.Parameter1 );
+            Assert.Equal ( new List<string> { "test", "values", "with", "spaces" }, result.Parameter2 );
+            Assert.Equal ( new List<string> { "first1212121", "quotes string with spaces", "last4534534" }, result.Parameter3 );
+        }
 
     }
 

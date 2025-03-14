@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Reflection;
+using System.Text;
 
 namespace FlowCommandLine {
 
@@ -120,7 +121,19 @@ namespace FlowCommandLine {
                     break;
                 case Type _ when type == typeof ( string ):
                     if ( values.ContainsKey ( parameterKey ) ) {
-                        property.SetValue ( model, values[parameterKey] );
+                        property.SetValue ( model, MapStringValue ( values[parameterKey] ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( IEnumerable<string> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapStringCollections ( values[parameterKey] ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( List<string> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapStringCollections ( values[parameterKey] ) );
                         isChanged = true;
                     }
                     break;
@@ -198,6 +211,62 @@ namespace FlowCommandLine {
                 .Where ( a => a != null )
                 .Select ( a => a!.Value )
                 .ToList ();
+        }
+
+        private static string MapStringValue ( string value ) {
+            value = value.Trim ();
+            if ( value.StartsWith ( '\"' ) ) value = value[1..];
+            if ( value.EndsWith ( '\"' ) ) value = value[..^1];
+
+            return value;
+        }
+
+        private static List<string> GetStringParts ( string value ) {
+            var currentValue = new StringBuilder ();
+            var result = new List<string> ();
+            var quoteStarted = false;
+            foreach ( var character in value ) {
+                if ( character == ' ' && !quoteStarted ) {
+                    if ( currentValue.Length > 0 ) {
+                        result.Add ( currentValue.ToString () );
+                        currentValue.Clear ();
+                    }
+                    continue;
+                }
+                if ( character == '\"' && !quoteStarted ) {
+                    quoteStarted = true;
+                    if ( currentValue.Length > 0 ) {
+                        result.Add ( currentValue.ToString () );
+                        currentValue.Clear ();
+                    }
+                    continue;
+                }
+                if ( character == '\"' && quoteStarted ) {
+                    quoteStarted = false;
+                    if ( currentValue.Length > 0 ) {
+                        result.Add ( currentValue.ToString () );
+                        currentValue.Clear ();
+                    }
+                    continue;
+                }
+
+                currentValue.Append ( character );
+            }
+
+            if ( currentValue.Length > 0 ) result.Add ( currentValue.ToString () );
+
+            return result;
+        }
+
+        private static List<string> MapStringCollections ( string value ) {
+            if ( value.Contains ( '\"' ) ) {
+                return GetStringParts ( value );
+            } else {
+                return value
+                    .Split ( " " )
+                    .Where ( a => !string.IsNullOrEmpty ( a ) )
+                    .ToList ();
+            }
         }
 
     }
