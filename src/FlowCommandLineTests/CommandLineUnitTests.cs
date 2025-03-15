@@ -780,7 +780,7 @@ namespace FlowCommandLineTests {
             //arrange
             var messages = new List<string> ();
             var fakeProvider = A.Fake<ICommandLineProvider> ();
-            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=argus bargus margus --parameter2=test values with spaces --parameter3=first1212121 \"quotes string with spaces\" last4534534" );
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=argus bargus margus --parameter2=\"test\" values with \"spaces\" --parameter3=first1212121 \"quotes string with spaces\" last4534534" );
             A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
             var commandLine = new CommandLine ( fakeProvider );
 
