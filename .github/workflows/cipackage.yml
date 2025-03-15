@@ -24,3 +24,6 @@ jobs:
       run: dotnet test --configuration Release src/FlowCommandLine/FlowCommandLine.sln
     - name: Pack package
       run: dotnet pack --configuration Release --no-build --output . src/FlowCommandLine/FlowCommandLine.csproj
+    - uses: actions/upload-artifact@v4
+      with:
+        path: FlowCommandLine.*.nupkg
