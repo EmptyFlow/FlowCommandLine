@@ -16,7 +16,7 @@
 		<PackageTags>command,line,commandline,command-line,parse,parser,parsing,shell</PackageTags>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Version>1.0.2.0</Version>
+		<Version>1.0.3.0</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
