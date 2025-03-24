@@ -3,19 +3,19 @@ using System.Reflection;
 
 namespace FlowCommandLine {
 
-    internal record FlowCommandAsyncDelegate<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicProperties )] T> : FlowAsyncCommand where T : new() {
+    internal record FlowCommandAsyncDelegate<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.All )] T> : FlowAsyncCommand where T : new() {
 
         public FlowCommandLineCommandAsyncDelegate<T>? @Delegate { get; init; }
 
         public T MapParametersToType ( Dictionary<string, string> values, ICommandLineProvider commandLineProvider ) {
-            var result = new T ();
+            var resultType = typeof ( T );
 
-            var properties = result
-                .GetType ()
+            var properties = resultType
                 .GetProperties ( BindingFlags.Public | BindingFlags.Instance );
             var parameters = FlowPropertyMapper.ParametersToDictionary ( Parameters );
 
             var processedParameters = new HashSet<FlowCommandParameter> ();
+            var result = new T ();
 
             foreach ( var parameter in parameters ) {
                 var property = FlowPropertyMapper.GetPropertyFromParameter ( parameter.Value, properties );

@@ -62,7 +62,7 @@ namespace FlowCommandLine {
         /// <param name="delegate">Delegate that will be called in case if user select this command in console.</param>
         /// <param name="description">A human-readable description of the command.</param>
         /// <param name="parameters">Command parameters.</param>
-        public CommandLine AddCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicProperties )] T> ( string name, FlowCommandLineCommandDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
+        public CommandLine AddCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.All )] T> ( string name, FlowCommandLineCommandDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
             var lowerName = name.ToLowerInvariant ();
             m_commands[lowerName] = new FlowCommandDelegate<T> {
                 Delegate = @delegate,
@@ -77,7 +77,7 @@ namespace FlowCommandLine {
             return this;
         }
 
-        public CommandLine AddAsyncCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicProperties )] T> ( string name, FlowCommandLineCommandAsyncDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
+        public CommandLine AddAsyncCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.All )] T> ( string name, FlowCommandLineCommandAsyncDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
             var lowerName = name.ToLowerInvariant ();
             m_asyncCommands[lowerName] = new FlowCommandAsyncDelegate<T> {
                 Delegate = @delegate,
@@ -167,7 +167,7 @@ namespace FlowCommandLine {
         /// <summary>
         /// Run the command from the command line.
         /// </summary>
-        public T? RunOptions<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.PublicProperties )] T> () where T : new() {
+        public T? RunOptions<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.All )] T> () where T : new() {
             if ( IsVersion () ) {
                 ShowVersion ();
                 return default;
