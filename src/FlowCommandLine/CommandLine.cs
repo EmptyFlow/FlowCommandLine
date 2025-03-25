@@ -196,13 +196,25 @@ namespace FlowCommandLine {
         }
 
         private void ShowParameters ( List<FlowCommandParameter> commandParameters ) {
-            m_commandLineProvider.WriteLine ( "The following parameters are available:" );
-            foreach ( var parameter in commandParameters ) {
-                var parameters = new List<string> ();
-                if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
-                if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
+            if ( commandParameters.Any ( a => a.Required ) ) {
+                m_commandLineProvider.WriteLine ( "The following arguments are available:" );
+                foreach ( var parameter in commandParameters.Where ( a => a.Required ) ) {
+                    var parameters = new List<string> ();
+                    if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
+                    if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
 
-                m_commandLineProvider.WriteLine ( $"  {string.Join ( ' ', parameters )} {parameter.Description}" );
+                    m_commandLineProvider.WriteLine ( $"  {string.Join ( ' ', parameters )} {parameter.Description}" );
+                }
+            }
+            if ( commandParameters.Any ( a => !a.Required ) ) {
+                m_commandLineProvider.WriteLine ( "The following options are available:" );
+                foreach ( var parameter in commandParameters.Where ( a => !a.Required ) ) {
+                    var parameters = new List<string> ();
+                    if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
+                    if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
+
+                    m_commandLineProvider.WriteLine ( $"  {string.Join ( ' ', parameters )} {parameter.Description}" );
+                }
             }
         }
 
@@ -310,7 +322,7 @@ namespace FlowCommandLine {
                     currentPart.Clear ();
                     continue;
                 }
-                if ( character == '-' && (previousCharacter == ' ' || currentIndex == 0) && !parameterStarted ) {
+                if ( character == '-' && ( previousCharacter == ' ' || currentIndex == 0 ) && !parameterStarted ) {
                     parameterStarted = true;
                     result.Add ( currentPart.ToString () );
                     currentPart.Clear ();

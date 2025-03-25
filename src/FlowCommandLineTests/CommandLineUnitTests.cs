@@ -217,7 +217,7 @@ namespace FlowCommandLineTests {
             Assert.True ( isCorrect );
             Assert.Equal ( "Not all required parameters is defined!", messages.First () );
             Assert.Equal ( " ", messages.ElementAt ( 1 ) );
-            Assert.Equal ( "The following parameters are available:", messages.ElementAt ( 2 ) );
+            Assert.Equal ( "The following arguments are available:", messages.ElementAt ( 2 ) );
             Assert.Equal ( "  --Parameter1 Description", messages.ElementAt ( 3 ) );
         }
 
