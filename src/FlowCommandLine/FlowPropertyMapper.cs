@@ -119,6 +119,12 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( bool ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapBooleanValue ( values[parameterKey] ) );
+                        isChanged = true;
+                    }
+                    break;
                 case Type _ when type == typeof ( string ):
                     if ( values.ContainsKey ( parameterKey ) ) {
                         property.SetValue ( model, MapStringValue ( values[parameterKey] ) );
@@ -143,6 +149,12 @@ namespace FlowCommandLine {
             }
 
             return isChanged;
+        }
+
+        private static bool MapBooleanValue ( string value ) {
+            if ( string.IsNullOrEmpty ( value ) || value.ToLowerInvariant () == "true" ) return true;
+
+            return false;
         }
 
         private static List<int> MapIntegerCollections ( Dictionary<string, string> values, string parameterKey ) {

@@ -297,6 +297,40 @@ namespace FlowCommandLineTests {
             Assert.True ( isCorrect );
         }
 
+        [Fact]
+        public void RunCommand_Success_DateOnlyTimeSpan_Names () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test -p1=2025-02-04 -p2=2025-02-04T12:35:20 -p3=18:10:20" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            var isCorrect = true;
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand (
+                    "test",
+                    ( RunCommand_Success_DateOnlyTimeSpan_Class arg ) => {
+                        isCorrect = arg.Parameter1 == new DateOnly ( 2025, 2, 4 ) &&
+                            arg.Parameter2 == new DateTime ( 2025, 2, 4, 12, 35, 20 ) &&
+                            arg.Parameter3 == new TimeSpan ( 18, 10, 20 );
+                    },
+                    "",
+                    new List<FlowCommandParameter> {
+                        FlowCommandParameter.Create("p1", property: "Parameter1"),
+                        FlowCommandParameter.Create("p2", property: "Parameter2"),
+                        FlowCommandParameter.Create("p3", property: "Parameter3"),
+                    }
+                )
+                .RunCommand ();
+
+            //assert
+            Assert.True ( isCorrect );
+        }
+
         public record RunOptions_Success_SingleParameter_Class {
             public string Parameter1 { get; set; } = "";
         }
@@ -797,6 +831,108 @@ namespace FlowCommandLineTests {
             Assert.Equal ( new List<string> { "argus", "bargus", "margus" }, result.Parameter1 );
             Assert.Equal ( new List<string> { "test", "values", "with", "spaces" }, result.Parameter2 );
             Assert.Equal ( new List<string> { "first1212121", "quotes string with spaces", "last4534534" }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_RunOptions_Success_BooleanParameter_Class {
+            public string Parameter1 { get; set; } = "";
+            public bool Parameter2 { get; set; }
+            public string Parameter3 { get; set; } = "";
+        }
+
+        [Fact]
+        public void RunOptions_Success_BooleanParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=Lala --parameter2 --parameter3=Muhaha" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_RunOptions_Success_BooleanParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( "Lala", result.Parameter1 );
+            Assert.True ( result.Parameter2 );
+            Assert.Equal ( "Muhaha", result.Parameter3 );
+        }
+
+        [Fact]
+        public void RunOptions_Success_BooleanParameter_AsTrue () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=Lala --parameter2=true --parameter3=Muhaha" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_RunOptions_Success_BooleanParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( "Lala", result.Parameter1 );
+            Assert.True ( result.Parameter2 );
+            Assert.Equal ( "Muhaha", result.Parameter3 );
+        }
+
+        [Fact]
+        public void RunOptions_Success_BooleanParameter_AsFalse () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=Lala --parameter2=false --parameter3=Muhaha" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_RunOptions_Success_BooleanParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( "Lala", result.Parameter1 );
+            Assert.False ( result.Parameter2 );
+            Assert.Equal ( "Muhaha", result.Parameter3 );
+        }
+
+        [Fact]
+        public void RunOptions_Success_BooleanParameter_AsFalse_NotFilled () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=Lala --parameter3=Muhaha" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_RunOptions_Success_BooleanParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( "Lala", result.Parameter1 );
+            Assert.False ( result.Parameter2 );
+            Assert.Equal ( "Muhaha", result.Parameter3 );
         }
 
     }
