@@ -34,11 +34,13 @@ CommandLine.Console ()
                 Description = "parameter description",
                 Required = true, // parameter is required
             },
+            FlowCommandParameter.CreateRequired("p3", "param3", "parameter description"), // use factory method for required parameter
             new FlowCommandParameter {
                 FullName = "param2", // full name is required property, other properties ShortName or PropertyName can be inferred from FullName
                 Description = "parameter2 description",
                 Required = false,
-            }
+            },
+            FlowCommandParameter.Create("p4", "param4", "parameter description"), // use factory method for non required parameter
         }
     )
     .RunCommand ();
