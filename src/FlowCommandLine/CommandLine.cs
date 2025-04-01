@@ -357,8 +357,11 @@ namespace FlowCommandLine {
                 .Where ( a => ( a.StartsWith ( "-" ) && a.Length > 1 ) || ( a.StartsWith ( "--" ) && a.Length > 2 ) )
                 .Select (
                     a => {
-                        var pair = a.StartsWith ( "--" ) ? a.Substring ( 2 ).Split ( "=" ) : a.Substring ( 1 ).Split ( "=" );
-                        return new { Name = pair[0], Value = pair.Length > 1 ? pair[1] : "" };
+                        var clearPrefix = a.StartsWith ( "--" ) ? a.Substring ( 2 ) : a.Substring ( 1 );
+                        var indexEqual = clearPrefix.IndexOf ( "=" );
+                        if ( indexEqual == -1 ) return new { Name = clearPrefix, Value = "" };
+
+                        return new { Name = clearPrefix.Substring ( 0, indexEqual ), Value = clearPrefix.Substring ( indexEqual + 1 ) };
                     }
                 )
                 .ToDictionary ( a => a.Name, a => a.Value );

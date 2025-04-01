@@ -444,7 +444,7 @@ namespace FlowCommandLineTests {
         }
 
         public record RunOptions_Success_ListIntParameter_Class {
-            public List<int> Parameter1 { get; set; } = Enumerable.Empty<int> ().ToList();
+            public List<int> Parameter1 { get; set; } = Enumerable.Empty<int> ().ToList ();
             public List<int> Parameter2 { get; set; } = Enumerable.Empty<int> ().ToList ();
             public List<int> Parameter3 { get; set; } = Enumerable.Empty<int> ().ToList ();
         }
@@ -934,6 +934,60 @@ namespace FlowCommandLineTests {
             Assert.False ( result.Parameter2 );
             Assert.Equal ( "Muhaha", result.Parameter3 );
         }
+
+        public class DatabaseAdjustments {
+
+            public IEnumerable<string> Files { get; set; } = Enumerable.Empty<string> ();
+
+            public IEnumerable<string> ConnectionStrings { get; set; } = Enumerable.Empty<string> ();
+
+            public string Strategy { get; set; } = "";
+
+            public string Group { get; set; } = "";
+
+            public string MigrationTable { get; set; } = "";
+
+        }
+
+        [Fact]
+        public void RunOptions_Success_ComplexParameters () {
+            //arrange
+            var databaseAdjustments = new List<FlowCommandParameter> {
+                FlowCommandParameter.Create("f", "files", "List of files containing migrations."),
+                FlowCommandParameter.CreateRequired("c", "connectionStrings", "List of connection strings to which migrations will be applied."),
+                FlowCommandParameter.CreateRequired("s", "strategy", "Select strategy for read migrations."),
+                FlowCommandParameter.Create("g", "group", "If you specify some group or groups (separated by commas), migrations will be filtered by these groups."),
+                FlowCommandParameter.Create("t", "tablename", "You can change the name of the table in which the migrations will be stored.", "MigrationTable"),
+            };
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "apply -f=src/ONielCms/bin/Debug/net8.0/ONielCommon.dll -c=Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=onielcms -s=CSharpClasses" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+            DatabaseAdjustments result = new DatabaseAdjustments ();
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand<DatabaseAdjustments> (
+                    "apply",
+                    ( DatabaseAdjustments options ) => {
+                        result = options;
+                    },
+                    "",
+                    databaseAdjustments
+                )
+                .RunCommand();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( result.Files, new List<string> { "src/ONielCms/bin/Debug/net8.0/ONielCommon.dll" } );
+            Assert.Equal ( result.ConnectionStrings, new List<string> { "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=onielcms" } );
+            Assert.Equal ( "CSharpClasses", result.Strategy );
+        }
+
+
+
 
     }
 
