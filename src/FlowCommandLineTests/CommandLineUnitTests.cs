@@ -208,7 +208,8 @@ namespace FlowCommandLineTests {
                     },
                     "",
                     new List<FlowCommandParameter> {
-                        new FlowCommandParameter { FullName = "Parameter1", Description = "Description", Required = true }
+                        new FlowCommandParameter { FullName = "Parameter1", Description = "Description", Required = true },
+                        new FlowCommandParameter { FullName = "Parameter2", Description = "Description", Required = false }
                     }
                 )
                 .RunCommand ();
@@ -219,6 +220,8 @@ namespace FlowCommandLineTests {
             Assert.Equal ( " ", messages.ElementAt ( 1 ) );
             Assert.Equal ( "The following arguments are available:", messages.ElementAt ( 2 ) );
             Assert.Equal ( "  --Parameter1 Description", messages.ElementAt ( 3 ) );
+            Assert.Equal ( "The following options are available:", messages.ElementAt ( 4 ) );
+            Assert.Equal ( "  --Parameter2 Description", messages.ElementAt ( 5 ) );
         }
 
         public record RunCommand_Success_QuotedParameters_Class {

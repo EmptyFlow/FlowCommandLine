@@ -198,20 +198,38 @@ namespace FlowCommandLine {
         private void ShowParameters ( List<FlowCommandParameter> commandParameters ) {
             if ( commandParameters.Any ( a => a.Required ) ) {
                 m_commandLineProvider.WriteLine ( "The following arguments are available:" );
-                foreach ( var parameter in commandParameters.Where ( a => a.Required ) ) {
+                var requiredParameters = commandParameters
+                    .Where ( a => a.Required )
+                    .ToList ();
+                var maximumLength = requiredParameters
+                    .Select ( a => ( !string.IsNullOrEmpty ( a.FullName ) ? a.FullName.Count () + 2 : 0 ) + ( !string.IsNullOrEmpty ( a.ShortName ) ? a.ShortName.Count () + 1 : 0 ) )
+                    .Max ();
+                foreach ( var parameter in requiredParameters ) {
                     var parameters = new List<string> ();
                     if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
                     if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
 
-                    m_commandLineProvider.WriteLine ( $"  {string.Join ( ' ', parameters )} {parameter.Description}" );
+                    var parametersValue = string.Join ( ' ', parameters );
+                    if ( parametersValue.Length < maximumLength ) parametersValue += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - parametersValue.Length ) );
+
+                    m_commandLineProvider.WriteLine ( $"  {parametersValue} {parameter.Description}" );
                 }
             }
             if ( commandParameters.Any ( a => !a.Required ) ) {
                 m_commandLineProvider.WriteLine ( "The following options are available:" );
-                foreach ( var parameter in commandParameters.Where ( a => !a.Required ) ) {
+
+                var nonRequiredParameters = commandParameters.Where ( a => !a.Required );
+                var maximumLength = nonRequiredParameters
+                    .Select ( a => ( !string.IsNullOrEmpty ( a.FullName ) ? a.FullName.Count () + 2 : 0 ) + ( !string.IsNullOrEmpty ( a.ShortName ) ? a.ShortName.Count () + 1 : 0 ) )
+                    .Max ();
+
+                foreach ( var parameter in nonRequiredParameters ) {
                     var parameters = new List<string> ();
                     if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
                     if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
+
+                    var parametersValue = string.Join ( ' ', parameters );
+
 
                     m_commandLineProvider.WriteLine ( $"  {string.Join ( ' ', parameters )} {parameter.Description}" );
                 }

@@ -20,7 +20,7 @@
 		<IsTrimmable>true</IsTrimmable>
 		<PublishTrimmed>true</PublishTrimmed>
 		<PackageReleaseNotes>
-			Fixed parsing values with character =
+			Fixed padding for command parameters
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
