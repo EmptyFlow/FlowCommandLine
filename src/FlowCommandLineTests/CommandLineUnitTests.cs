@@ -1,5 +1,6 @@
 ﻿using FakeItEasy;
 using FlowCommandLine;
+using FlowCommandLine.SpecialTypes;
 
 namespace FlowCommandLineTests {
 
@@ -936,6 +937,72 @@ namespace FlowCommandLineTests {
             Assert.Equal ( "Lala", result.Parameter1 );
             Assert.False ( result.Parameter2 );
             Assert.Equal ( "Muhaha", result.Parameter3 );
+        }
+
+        public record RunOptions_Success_RangeIntParameter_Completed_Class {
+
+            public CommandLineRange<int> Parameter1 { get; set; } = new CommandLineRange<int> ();
+
+        }
+
+        [Fact]
+        public void RunOptions_Success_RangeIntParameter_Completed () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1-100" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .RunOptions<RunOptions_Success_RangeIntParameter_Completed_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 1, result.Parameter1.Start );
+            Assert.Equal ( 100, result.Parameter1.End );
+        }
+
+        public record RunOptions_Success_RangeIntParameter_NotParsed_Class {
+
+            public CommandLineRange<int> Parameter1 { get; set; } = new CommandLineRange<int> ();
+
+            public CommandLineRange<int> Parameter2 { get; set; } = new CommandLineRange<int> ();
+
+            public CommandLineRange<int> Parameter3 { get; set; } = new CommandLineRange<int> ();
+
+            public CommandLineRange<int> Parameter4 { get; set; } = new CommandLineRange<int> ();
+
+        }
+
+        [Fact]
+        public void RunOptions_Success_RangeIntParameter_NotParsed () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1 --parameter2=- --parameter3=-100 --parameter4=1-" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .RunOptions<RunOptions_Success_RangeIntParameter_NotParsed_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 0, result.Parameter1.Start );
+            Assert.Equal ( 0, result.Parameter1.End );
+            Assert.Equal ( 0, result.Parameter2.Start );
+            Assert.Equal ( 0, result.Parameter2.End );
+            Assert.Equal ( 0, result.Parameter3.Start );
+            Assert.Equal ( 0, result.Parameter3.End );
+            Assert.Equal ( 0, result.Parameter4.Start );
+            Assert.Equal ( 0, result.Parameter4.End );
         }
 
         public class DatabaseAdjustments {

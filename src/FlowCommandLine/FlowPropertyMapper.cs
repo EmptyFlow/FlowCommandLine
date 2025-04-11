@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using FlowCommandLine.SpecialTypes;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 
@@ -143,6 +144,12 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( CommandLineRange<int> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapRangeIntCollections ( values[parameterKey] ) );
+                        isChanged = true;
+                    }
+                    break;
                 default:
                     Console.WriteLine ( $"Property {property.Name} with type {property.PropertyType.FullName} inside class {type.Name} not supported!" );
                     break;
@@ -279,6 +286,27 @@ namespace FlowCommandLine {
                     .Where ( a => !string.IsNullOrEmpty ( a ) )
                     .ToList ();
             }
+        }
+
+        private static CommandLineRange<int> MapRangeIntCollections ( string value ) {
+            if ( !value.Contains ( '-' ) ) return new CommandLineRange<int> ();
+
+            var parts = value
+                .Split ( '-' )
+                .Select (
+                    a => {
+                        if ( int.TryParse ( a, out var int32value ) ) return int32value;
+
+                        return 0;
+                    }
+                )
+                .ToList ();
+            if ( parts.Count () < 2 ) return new CommandLineRange<int> ();
+
+            return new CommandLineRange<int> {
+                Start = parts.First (),
+                End = parts.ElementAt ( 1 ),
+            };
         }
 
     }
