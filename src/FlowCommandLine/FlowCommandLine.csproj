@@ -20,7 +20,9 @@
 		<IsTrimmable>true</IsTrimmable>
 		<PublishTrimmed>true</PublishTrimmed>
 		<PackageReleaseNotes>
-			Fixed padding for command parameters
+			Added support Range|int type for parsing
+			Added support Range|double type for parsing
+			Added support Range|float type for parsing
 		</PackageReleaseNotes>
 	</PropertyGroup>
 

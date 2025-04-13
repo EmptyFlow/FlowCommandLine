@@ -150,6 +150,18 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( CommandLineRange<double> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapRangeDoubleCollections ( values[parameterKey] ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( CommandLineRange<float> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapRangeFloatCollections ( values[parameterKey] ) );
+                        isChanged = true;
+                    }
+                    break;
                 default:
                     Console.WriteLine ( $"Property {property.Name} with type {property.PropertyType.FullName} inside class {type.Name} not supported!" );
                     break;
@@ -297,15 +309,69 @@ namespace FlowCommandLine {
                     a => {
                         if ( int.TryParse ( a, out var int32value ) ) return int32value;
 
-                        return 0;
+                        return (int?) null;
                     }
                 )
                 .ToList ();
+            parts = parts.Where ( a => a.HasValue ).ToList ();
             if ( parts.Count () < 2 ) return new CommandLineRange<int> ();
 
+            var firstPart = parts.First ()!.Value;
+            var secondPart = parts.ElementAt ( 1 )!.Value;
+
             return new CommandLineRange<int> {
-                Start = parts.First (),
-                End = parts.ElementAt ( 1 ),
+                Start = firstPart,
+                End = secondPart,
+            };
+        }
+
+        private static CommandLineRange<double> MapRangeDoubleCollections ( string value ) {
+            if ( !value.Contains ( '-' ) ) return new CommandLineRange<double> ();
+
+            var parts = value
+                .Split ( '-' )
+                .Select (
+                    a => {
+                        if ( double.TryParse ( a, CultureInfo.InvariantCulture, out var doublevalue ) ) return doublevalue;
+
+                        return (double?) null;
+                    }
+                )
+                .ToList ();
+            parts = parts.Where ( a => a.HasValue ).ToList ();
+            if ( parts.Count () < 2 ) return new CommandLineRange<double> ();
+
+            var firstPart = parts.First ()!.Value;
+            var secondPart = parts.ElementAt ( 1 )!.Value;
+
+            return new CommandLineRange<double> {
+                Start = firstPart,
+                End = secondPart,
+            };
+        }
+
+        private static CommandLineRange<float> MapRangeFloatCollections ( string value ) {
+            if ( !value.Contains ( '-' ) ) return new CommandLineRange<float> ();
+
+            var parts = value
+                .Split ( '-' )
+                .Select (
+                    a => {
+                        if ( float.TryParse ( a, CultureInfo.InvariantCulture, out var floatValue ) ) return floatValue;
+
+                        return (float?) null;
+                    }
+                )
+                .ToList ();
+            parts = parts.Where ( a => a.HasValue ).ToList ();
+            if ( parts.Count () < 2 ) return new CommandLineRange<float> ();
+
+            var firstPart = parts.First ()!.Value;
+            var secondPart = parts.ElementAt ( 1 )!.Value;
+
+            return new CommandLineRange<float> {
+                Start = firstPart,
+                End = secondPart,
             };
         }
 

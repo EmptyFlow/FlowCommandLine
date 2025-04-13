@@ -991,6 +991,9 @@ namespace FlowCommandLineTests {
             var result = commandLine
                 .Application ( "TestApplication", "1.0.0" )
                 .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .AddOption ( fullName: "Parameter4" )
                 .RunOptions<RunOptions_Success_RangeIntParameter_NotParsed_Class> ();
 
             //assert
@@ -1003,6 +1006,100 @@ namespace FlowCommandLineTests {
             Assert.Equal ( 0, result.Parameter3.End );
             Assert.Equal ( 0, result.Parameter4.Start );
             Assert.Equal ( 0, result.Parameter4.End );
+        }
+
+        public record RunOptions_Success_RangeDoubleParameter_NotParsed_Class {
+
+            public CommandLineRange<double> Parameter1 { get; set; } = new CommandLineRange<double> ();
+
+            public CommandLineRange<double> Parameter2 { get; set; } = new CommandLineRange<double> ();
+
+            public CommandLineRange<double> Parameter3 { get; set; } = new CommandLineRange<double> ();
+
+            public CommandLineRange<double> Parameter4 { get; set; } = new CommandLineRange<double> ();
+
+            public CommandLineRange<double> Parameter5 { get; set; } = new CommandLineRange<double> ();
+
+        }
+
+        [Fact]
+        public void RunOptions_Success_RangeDoubleParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=235.30 --parameter2=- --parameter3=-100.30 --parameter4=178.56- --parameter5=178.56-895.450" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .AddOption ( fullName: "Parameter4" )
+                .AddOption ( fullName: "Parameter5" )
+                .RunOptions<RunOptions_Success_RangeDoubleParameter_NotParsed_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 0, result.Parameter1.Start );
+            Assert.Equal ( 0, result.Parameter1.End );
+            Assert.Equal ( 0, result.Parameter2.Start );
+            Assert.Equal ( 0, result.Parameter2.End );
+            Assert.Equal ( 0, result.Parameter3.Start );
+            Assert.Equal ( 0, result.Parameter3.End );
+            Assert.Equal ( 0, result.Parameter4.Start );
+            Assert.Equal ( 0, result.Parameter4.End );
+            Assert.Equal ( 178.56, result.Parameter5.Start );
+            Assert.Equal ( 895.450, result.Parameter5.End );
+        }
+
+        public record RunOptions_Success_RangeFloatParameter_Class {
+
+            public CommandLineRange<float> Parameter1 { get; set; } = new CommandLineRange<float> ();
+
+            public CommandLineRange<float> Parameter2 { get; set; } = new CommandLineRange<float> ();
+
+            public CommandLineRange<float> Parameter3 { get; set; } = new CommandLineRange<float> ();
+
+            public CommandLineRange<float> Parameter4 { get; set; } = new CommandLineRange<float> ();
+
+            public CommandLineRange<float> Parameter5 { get; set; } = new CommandLineRange<float> ();
+
+        }
+
+        [Fact]
+        public void RunOptions_Success_RangeFloatParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=235.30 --parameter2=- --parameter3=-100.30 --parameter4=178.56- --parameter5=178.56-895.450" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .AddOption ( fullName: "Parameter4" )
+                .AddOption ( fullName: "Parameter5" )
+                .RunOptions<RunOptions_Success_RangeFloatParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 0, result.Parameter1.Start );
+            Assert.Equal ( 0, result.Parameter1.End );
+            Assert.Equal ( 0, result.Parameter2.Start );
+            Assert.Equal ( 0, result.Parameter2.End );
+            Assert.Equal ( 0, result.Parameter3.Start );
+            Assert.Equal ( 0, result.Parameter3.End );
+            Assert.Equal ( 0, result.Parameter4.Start );
+            Assert.Equal ( 0, result.Parameter4.End );
+            Assert.Equal ( 178.56f, result.Parameter5.Start );
+            Assert.Equal ( 895.450f, result.Parameter5.End );
         }
 
         public class DatabaseAdjustments {
