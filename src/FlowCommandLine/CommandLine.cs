@@ -93,16 +93,26 @@ namespace FlowCommandLine {
         /// <summary>
         /// Run the command from the command line.
         /// </summary>
-        public Task RunCommandAsync () {
+        public async Task<FlowCommandResult> RunCommandAsync () {
             if ( IsVersion () ) {
                 ShowVersion ();
-                return Task.CompletedTask;
+
+                return new FlowCommandResult {
+                    EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
+                    CommandHandled = false,
+                    Handled = true
+                };
             }
 
             var parts = GetParts ();
             if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
                 ShowHelp ( parts, true );
-                return Task.CompletedTask;
+
+                return new FlowCommandResult {
+                    EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
+                    CommandHandled = false,
+                    Handled = parts.Any ()
+                };
             }
 
             ParseParameters ( parts, out var command, out var parameters );
@@ -110,14 +120,24 @@ namespace FlowCommandLine {
             try {
                 if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
                     flowCommand.Execute ( parameters, m_commandLineProvider );
-                    return Task.CompletedTask;
+
+                    return new FlowCommandResult {
+                        EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
+                        CommandHandled = true,
+                        Handled = false
+                    };
                 }
-                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) return flowAsyncCommand.Execute ( parameters, m_commandLineProvider );
+                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) await flowAsyncCommand.Execute ( parameters, m_commandLineProvider );
             } catch {
             }
 
             ShowHelp ( parts );
-            return Task.CompletedTask;
+
+            return new FlowCommandResult {
+                EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
+                CommandHandled = false,
+                Handled = false
+            };
         }
 
         /// <summary>
