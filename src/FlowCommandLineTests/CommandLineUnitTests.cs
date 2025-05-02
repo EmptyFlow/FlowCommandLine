@@ -16,7 +16,7 @@ namespace FlowCommandLineTests {
             var commandLine = new CommandLine ( fakeProvider );
 
             //act
-            commandLine
+            var result = commandLine
                 .Application ( "TestApplication", "1.0.0" )
                 .RunCommand ();
 
@@ -25,6 +25,9 @@ namespace FlowCommandLineTests {
             Assert.Equal ( 2, messages.Count );
             Assert.Equal ( "TestApplication version 1.0.0", messages.First () );
             Assert.Equal ( " ", messages.ElementAt ( 1 ) );
+            Assert.True ( result.EmptyInput );
+            Assert.False ( result.Handled );
+            Assert.False ( result.CommandHandled );
         }
 
         [Fact]
@@ -37,7 +40,7 @@ namespace FlowCommandLineTests {
             var commandLine = new CommandLine ( fakeProvider );
 
             //act
-            commandLine
+            var result = commandLine
                 .Application ( "TestApplication", "1.0.0", "Application description!!!!" )
                 .RunCommand ();
 
@@ -48,6 +51,35 @@ namespace FlowCommandLineTests {
             Assert.Equal ( " ", messages.ElementAt ( 1 ) );
             Assert.Equal ( "Application description!!!!", messages.ElementAt ( 2 ) );
             Assert.Equal ( " ", messages.ElementAt ( 3 ) );
+            Assert.True ( result.EmptyInput );
+            Assert.False ( result.Handled );
+            Assert.False ( result.CommandHandled );
+        }
+
+        [Fact]
+        public void RunCommand_Success_OnlyDescription_ShowHelp_Parameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--help" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0", "Application description!!!!" )
+                .RunCommand ();
+
+            //assert
+            Assert.NotEmpty ( messages );
+            Assert.Equal ( 4, messages.Count );
+            Assert.Equal ( "TestApplication version 1.0.0", messages.First () );
+            Assert.Equal ( " ", messages.ElementAt ( 1 ) );
+            Assert.Equal ( "Application description!!!!", messages.ElementAt ( 2 ) );
+            Assert.Equal ( " ", messages.ElementAt ( 3 ) );
+            Assert.False ( result.EmptyInput );
+            Assert.True ( result.Handled );
+            Assert.False ( result.CommandHandled );
         }
 
         [Fact]
@@ -60,7 +92,7 @@ namespace FlowCommandLineTests {
             var commandLine = new CommandLine ( fakeProvider );
 
             //act
-            commandLine
+            var result = commandLine
                 .Application ( "TestApplication", "1.0.0", applicationExecutable: "testapp" )
                 .RunCommand ();
 
@@ -71,6 +103,9 @@ namespace FlowCommandLineTests {
             Assert.Equal ( " ", messages.ElementAt ( 1 ) );
             Assert.Equal ( "usage: testapp [<command>] [<parameters>]", messages.ElementAt ( 2 ) );
             Assert.Equal ( " ", messages.ElementAt ( 3 ) );
+            Assert.True ( result.EmptyInput );
+            Assert.False ( result.Handled );
+            Assert.False ( result.CommandHandled );
         }
 
         public record RunCommand_Success_OnlyCommands_ShowHelp_Class { }
@@ -120,7 +155,7 @@ namespace FlowCommandLineTests {
             var isCorrect = false;
 
             //act
-            commandLine
+            var result = commandLine
                 .Application ( "TestApplication", "1.0.0" )
                 .AddCommand (
                     "test",
@@ -140,6 +175,9 @@ namespace FlowCommandLineTests {
 
             //assert
             Assert.True ( isCorrect );
+            Assert.False ( result.EmptyInput );
+            Assert.False ( result.Handled );
+            Assert.True ( result.CommandHandled );
         }
 
         public record RunCommand_Success_IntLongDoubleFloatTypes_Class {
@@ -1144,7 +1182,7 @@ namespace FlowCommandLineTests {
                     "",
                     databaseAdjustments
                 )
-                .RunCommand();
+                .RunCommand ();
 
             //assert
             Assert.NotNull ( result );
