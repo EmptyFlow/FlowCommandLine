@@ -127,7 +127,14 @@ namespace FlowCommandLine {
                         Handled = false
                     };
                 }
-                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) await flowAsyncCommand.Execute ( parameters, m_commandLineProvider );
+                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) {
+                    await flowAsyncCommand.Execute ( parameters, m_commandLineProvider );
+                    return new FlowCommandResult {
+                        EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
+                        CommandHandled = true,
+                        Handled = false
+                    };
+                }
             } catch {
             }
 
