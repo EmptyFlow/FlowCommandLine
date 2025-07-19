@@ -84,6 +84,24 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( decimal ):
+                    if ( values.ContainsKey ( parameterKey ) && decimal.TryParse ( values[parameterKey], CultureInfo.InvariantCulture, out var decimalvalue ) ) {
+                        property.SetValue ( model, decimalvalue );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( IEnumerable<decimal> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapDecimalCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
+                case Type _ when type == typeof ( List<decimal> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapDecimalCollections ( values, parameterKey ) );
+                        isChanged = true;
+                    }
+                    break;
                 case Type _ when type == typeof ( float ):
                     if ( values.ContainsKey ( parameterKey ) && float.TryParse ( values[parameterKey], CultureInfo.InvariantCulture, out var floatvalue ) ) {
                         property.SetValue ( model, floatvalue );
@@ -162,6 +180,12 @@ namespace FlowCommandLine {
                         isChanged = true;
                     }
                     break;
+                case Type _ when type == typeof ( CommandLineRange<decimal> ):
+                    if ( values.ContainsKey ( parameterKey ) ) {
+                        property.SetValue ( model, MapRangeDecimalCollections ( values[parameterKey] ) );
+                        isChanged = true;
+                    }
+                    break;
                 default:
                     Console.WriteLine ( $"Property {property.Name} with type {property.PropertyType.FullName} inside class {type.Name} not supported!" );
                     break;
@@ -217,6 +241,23 @@ namespace FlowCommandLine {
                     a => {
                         if ( double.TryParse ( a, CultureInfo.InvariantCulture, out var doublevalue ) ) {
                             return (double?) doublevalue;
+                        } else {
+                            return null;
+                        }
+                    }
+                )
+                .Where ( a => a != null )
+                .Select ( a => a!.Value )
+                .ToList ();
+        }
+
+        private static List<decimal> MapDecimalCollections ( Dictionary<string, string> values, string parameterKey ) {
+            return values[parameterKey]
+                .Split ( "," )
+                .Select (
+                    a => {
+                        if ( decimal.TryParse ( a, CultureInfo.InvariantCulture, out var decimalvalue ) ) {
+                            return (decimal?) decimalvalue;
                         } else {
                             return null;
                         }
@@ -320,6 +361,31 @@ namespace FlowCommandLine {
             var secondPart = parts.ElementAt ( 1 )!.Value;
 
             return new CommandLineRange<int> {
+                Start = firstPart,
+                End = secondPart,
+            };
+        }
+
+        private static CommandLineRange<decimal> MapRangeDecimalCollections ( string value ) {
+            if ( !value.Contains ( '-' ) ) return new CommandLineRange<decimal> ();
+
+            var parts = value
+                .Split ( '-' )
+                .Select (
+                    a => {
+                        if ( decimal.TryParse ( a, CultureInfo.InvariantCulture, out var doublevalue ) ) return doublevalue;
+
+                        return (decimal?) null;
+                    }
+                )
+                .ToList ();
+            parts = parts.Where ( a => a.HasValue ).ToList ();
+            if ( parts.Count () < 2 ) return new CommandLineRange<decimal> ();
+
+            var firstPart = parts.First ()!.Value;
+            var secondPart = parts.ElementAt ( 1 )!.Value;
+
+            return new CommandLineRange<decimal> {
                 Start = firstPart,
                 End = secondPart,
             };

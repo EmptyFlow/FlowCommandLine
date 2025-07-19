@@ -16,11 +16,11 @@
 		<PackageTags>command,line,commandline,command-line,parse,parser,parsing,shell</PackageTags>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Version>1.0.9.0</Version>
+		<Version>1.0.10.0</Version>
 		<IsTrimmable>true</IsTrimmable>
 		<PublishTrimmed>true</PublishTrimmed>
 		<PackageReleaseNotes>
-			Fixed RunCommandAsync() handled result for asynchronous commands.
+			Added supported types decimal,IEnumerable/decimal,List/decimal, CommandLineRange/decimal
 		</PackageReleaseNotes>
 	</PropertyGroup>
 

@@ -180,19 +180,20 @@ namespace FlowCommandLineTests {
             Assert.True ( result.CommandHandled );
         }
 
-        public record RunCommand_Success_IntLongDoubleFloatTypes_Class {
+        public record RunCommand_Success_IntLongDoubleFloatDecimalTypes_Class {
             public int Parameter1 { get; set; }
             public long Parameter2 { get; set; }
             public double Parameter3 { get; set; }
             public float Parameter4 { get; set; }
+            public decimal Parameter5 { get; set; }
         }
 
         [Fact]
-        public void RunCommand_Success_IntLongDoubleFloatTypes () {
+        public void RunCommand_Success_IntLongDoubleFloatDecimalTypes () {
             //arrange
             var messages = new List<string> ();
             var fakeProvider = A.Fake<ICommandLineProvider> ();
-            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test -parameter1=1200 -parameter2=5000000000 -parameter3=5.20 -parameter4=0.20" );
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "test -parameter1=1200 -parameter2=5000000000 -parameter3=5.20 -parameter4=0.20 -parameter5=35.89" );
             var commandLine = new CommandLine ( fakeProvider );
 
             var isCorrect = false;
@@ -202,11 +203,12 @@ namespace FlowCommandLineTests {
                 .Application ( "TestApplication", "1.0.0" )
                 .AddCommand (
                     "test",
-                    ( RunCommand_Success_IntLongDoubleFloatTypes_Class arg ) => {
+                    ( RunCommand_Success_IntLongDoubleFloatDecimalTypes_Class arg ) => {
                         isCorrect = arg.Parameter1 == 1200 &&
                             arg.Parameter2 == 5000000000 &&
                             arg.Parameter3 == 5.20d &&
-                            arg.Parameter4 == 0.20f;
+                            arg.Parameter4 == 0.20f &&
+                            arg.Parameter5 == 35.89M;
                     },
                     "",
                     new List<FlowCommandParameter> {
@@ -214,6 +216,7 @@ namespace FlowCommandLineTests {
                         new FlowCommandParameter { FullName = "Parameter2" },
                         new FlowCommandParameter { FullName = "Parameter3" },
                         new FlowCommandParameter { FullName = "Parameter4" },
+                        new FlowCommandParameter { FullName = "Parameter5" },
                     }
                 )
                 .RunCommand ();
@@ -513,6 +516,66 @@ namespace FlowCommandLineTests {
             Assert.Equal ( new List<int> { 1, 2, 3, 4 }, result.Parameter1 );
             Assert.Equal ( new List<int> { 8124343, 2374234, 123412, 23423423, 8124343, 2374234, 123412, 23423423 }, result.Parameter2 );
             Assert.Equal ( new List<int> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_IEnumerableDecimalParameter_Class {
+            public IEnumerable<decimal> Parameter1 { get; set; } = Enumerable.Empty<decimal> ();
+            public IEnumerable<decimal> Parameter2 { get; set; } = Enumerable.Empty<decimal> ();
+            public IEnumerable<decimal> Parameter3 { get; set; } = Enumerable.Empty<decimal> ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_IEnumerableDecimalParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1.8,28.30,39.2,43.89 --parameter2=8124343.5656,2374234.567565,123412.343434,23423423.234234,8124343.2342342,2374234.546546,123412.23123,23423423 --parameter3=100,100,100,100,100,100" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_IEnumerableDecimalParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<decimal> { 1.8M, 28.30M, 39.2M, 43.89M }, result.Parameter1 );
+            Assert.Equal ( new List<decimal> { 8124343.5656M, 2374234.567565M, 123412.343434M, 23423423.234234M, 8124343.2342342M, 2374234.546546M, 123412.23123M, 23423423M }, result.Parameter2 );
+            Assert.Equal ( new List<decimal> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
+        }
+
+        public record RunOptions_Success_ListDecimalParameter_Class {
+            public List<decimal> Parameter1 { get; set; } = Enumerable.Empty<decimal> ().ToList ();
+            public List<decimal> Parameter2 { get; set; } = Enumerable.Empty<decimal> ().ToList ();
+            public List<decimal> Parameter3 { get; set; } = Enumerable.Empty<decimal> ().ToList ();
+        }
+
+        [Fact]
+        public void RunOptions_Success_ListDecimalParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=1.8,28.30,39.2,43.89 --parameter2=8124343.5656,2374234.567565,123412.343434,23423423.234234,8124343.2342342,2374234.546546,123412.23123,23423423 --parameter3=100,100,100,100,100,100" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .RunOptions<RunOptions_Success_ListDecimalParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( new List<decimal> { 1.8M, 28.30M, 39.2M, 43.89M }, result.Parameter1 );
+            Assert.Equal ( new List<decimal> { 8124343.5656M, 2374234.567565M, 123412.343434M, 23423423.234234M, 8124343.2342342M, 2374234.546546M, 123412.23123M, 23423423M }, result.Parameter2 );
+            Assert.Equal ( new List<decimal> { 100, 100, 100, 100, 100, 100 }, result.Parameter3 );
         }
 
         public record RunOptions_Success_LongParameter_Class {
@@ -1138,6 +1201,53 @@ namespace FlowCommandLineTests {
             Assert.Equal ( 0, result.Parameter4.End );
             Assert.Equal ( 178.56f, result.Parameter5.Start );
             Assert.Equal ( 895.450f, result.Parameter5.End );
+        }
+
+        public record RunOptions_Success_RangeDecimalParameter_Class {
+
+            public CommandLineRange<decimal> Parameter1 { get; set; } = new CommandLineRange<decimal> ();
+
+            public CommandLineRange<decimal> Parameter2 { get; set; } = new CommandLineRange<decimal> ();
+
+            public CommandLineRange<decimal> Parameter3 { get; set; } = new CommandLineRange<decimal> ();
+
+            public CommandLineRange<decimal> Parameter4 { get; set; } = new CommandLineRange<decimal> ();
+
+            public CommandLineRange<decimal> Parameter5 { get; set; } = new CommandLineRange<decimal> ();
+
+        }
+
+        [Fact]
+        public void RunOptions_Success_RangeDecimalParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=235.30 --parameter2=- --parameter3=-100.30 --parameter4=178.56- --parameter5=178.56-895.450" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOption ( fullName: "Parameter1" )
+                .AddOption ( fullName: "Parameter2" )
+                .AddOption ( fullName: "Parameter3" )
+                .AddOption ( fullName: "Parameter4" )
+                .AddOption ( fullName: "Parameter5" )
+                .RunOptions<RunOptions_Success_RangeDecimalParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 0, result.Parameter1.Start );
+            Assert.Equal ( 0, result.Parameter1.End );
+            Assert.Equal ( 0, result.Parameter2.Start );
+            Assert.Equal ( 0, result.Parameter2.End );
+            Assert.Equal ( 0, result.Parameter3.Start );
+            Assert.Equal ( 0, result.Parameter3.End );
+            Assert.Equal ( 0, result.Parameter4.Start );
+            Assert.Equal ( 0, result.Parameter4.End );
+            Assert.Equal ( 178.56M, result.Parameter5.Start );
+            Assert.Equal ( 895.450M, result.Parameter5.End );
         }
 
         public class DatabaseAdjustments {
