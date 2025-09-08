@@ -27,6 +27,19 @@ namespace FlowCommandLine {
             return result;
         }
 
+        public static void FillDefaultParameter<T> ( IEnumerable<FlowCommandParameter> parameters, string defaultParameterValue, ICommandLineProvider commandLineProvider, IEnumerable<PropertyInfo> properties, T model ) {
+            var defaultParameter = parameters.Where ( a => a.Default ).FirstOrDefault ();
+            if ( defaultParameter != null ) {
+                if ( string.IsNullOrEmpty ( defaultParameterValue ) ) {
+                    commandLineProvider.WriteLine ( "Not all required parameters is defined!" );
+                    throw new Exception ( "Not all required parameters is defined!" );
+                }
+                var property = GetPropertyFromParameter ( defaultParameter, properties );
+                var defaultValue = new Dictionary<string, string> { ["default"] = defaultParameterValue };
+                if ( property != null ) SetPropertyValue ( property.PropertyType, defaultValue, "default", model, property );
+            }
+        }
+
         public static bool SetPropertyValue<T> ( Type type, Dictionary<string, string> values, string parameterKey, T model, PropertyInfo property ) {
             bool isChanged = false;
             switch ( type ) {

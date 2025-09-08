@@ -1265,7 +1265,7 @@ namespace FlowCommandLineTests {
         }
 
         [Fact]
-        public void RunOptions_Success_ComplexParameters () {
+        public void RunCommand_Success_ComplexParameters () {
             //arrange
             var databaseAdjustments = new List<FlowCommandParameter> {
                 FlowCommandParameter.Create("f", "files", "List of files containing migrations."),
@@ -1301,8 +1301,93 @@ namespace FlowCommandLineTests {
             Assert.Equal ( "CSharpClasses", result.Strategy );
         }
 
+        [Fact]
+        public void ParseParameters_Success_DefaultParameter_OnlyDefault () {
+            //arrange
+            List<string> parts = ["command", "defaultValue"];
 
+            //act
+            CommandLine.ParseParameters ( parts, out var command, out var parameters, out var defaultParameter );
 
+            //assert
+            Assert.Equal ( "command", command );
+            Assert.Equal ( "defaultValue", defaultParameter );
+            Assert.Empty ( parameters );
+        }
+
+        [Fact]
+        public void RunCommand_Success_ComplexParameters_Case1 () {
+            //arrange
+            var databaseAdjustments = new List<FlowCommandParameter> {
+                FlowCommandParameter.Create("f", "files", "List of files containing migrations."),
+                FlowCommandParameter.CreateRequired("c", "connectionStrings", "List of connection strings to which migrations will be applied."),
+                FlowCommandParameter.CreateDefault("s", "strategy", "Select strategy for read migrations."),
+                FlowCommandParameter.Create("g", "group", "If you specify some group or groups (separated by commas), migrations will be filtered by these groups."),
+                FlowCommandParameter.Create("t", "tablename", "You can change the name of the table in which the migrations will be stored.", "MigrationTable"),
+            };
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "apply CSharpClasses -f=src/ONielCms/bin/Debug/net8.0/ONielCommon.dll -c=Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=onielcms" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+            DatabaseAdjustments result = new DatabaseAdjustments ();
+
+            //act
+            commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddCommand<DatabaseAdjustments> (
+                    "apply",
+                    ( DatabaseAdjustments options ) => {
+                        result = options;
+                    },
+                    "",
+                    databaseAdjustments
+                )
+                .RunCommand ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( result.Files, new List<string> { "src/ONielCms/bin/Debug/net8.0/ONielCommon.dll" } );
+            Assert.Equal ( result.ConnectionStrings, new List<string> { "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=onielcms" } );
+            Assert.Equal ( "CSharpClasses", result.Strategy );
+        }
+
+        [Fact]
+        public void RunOptions_Success_DefaultParameter () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "178.56-895.450 --parameter1=235.30 --parameter2=- --parameter3=-100.30 --parameter4=178.56-" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act
+            var result = commandLine
+                .Application ( "TestApplication", "1.0.0" )
+                .AddOptions (
+                    [
+                        FlowCommandParameter.Create(name: "Parameter1"),
+                        FlowCommandParameter.Create(name: "Parameter2"),
+                        FlowCommandParameter.Create(name: "Parameter3"),
+                        FlowCommandParameter.Create(name: "Parameter4"),
+                        FlowCommandParameter.CreateDefault(name: "Parameter5"),
+                    ]
+                )
+                .RunOptions<RunOptions_Success_RangeDecimalParameter_Class> ();
+
+            //assert
+            Assert.NotNull ( result );
+            Assert.Equal ( 0, result.Parameter1.Start );
+            Assert.Equal ( 0, result.Parameter1.End );
+            Assert.Equal ( 0, result.Parameter2.Start );
+            Assert.Equal ( 0, result.Parameter2.End );
+            Assert.Equal ( 0, result.Parameter3.Start );
+            Assert.Equal ( 0, result.Parameter3.End );
+            Assert.Equal ( 0, result.Parameter4.Start );
+            Assert.Equal ( 0, result.Parameter4.End );
+            Assert.Equal ( 178.56M, result.Parameter5.Start );
+            Assert.Equal ( 895.450M, result.Parameter5.End );
+        }
 
     }
 

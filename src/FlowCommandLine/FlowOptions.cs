@@ -7,16 +7,18 @@ namespace FlowCommandLine {
 
         public List<FlowCommandParameter> Parameters { get; init; } = new List<FlowCommandParameter> ();
 
-        public T MapParametersToType ( Dictionary<string, string> values, ICommandLineProvider commandLineProvider ) {
+        public T MapParametersToType ( Dictionary<string, string> values, ICommandLineProvider commandLineProvider, string defaultParameterValue ) {
             var resultType = typeof ( T );
+            var result = new T ();
 
             var properties = resultType
                 .GetProperties ( BindingFlags.Public | BindingFlags.Instance );
 
             var parameters = FlowPropertyMapper.ParametersToDictionary ( Parameters );
 
+            FlowPropertyMapper.FillDefaultParameter ( Parameters, defaultParameterValue, commandLineProvider, properties, result );
+
             var processedParameters = new HashSet<FlowCommandParameter> ();
-            var result = new T ();
 
             foreach ( var parameter in parameters ) {
                 var property = FlowPropertyMapper.GetPropertyFromParameter ( parameter.Value, properties );
@@ -27,7 +29,7 @@ namespace FlowCommandLine {
                 if ( isProcessed ) processedParameters.Add ( parameter.Value );
             }
 
-            var requiredParameters = Parameters.Where ( a => a.Required ).ToList ();
+            var requiredParameters = Parameters.Where ( a => a.Required && !a.Default ).ToList ();
             if ( requiredParameters.Intersect ( processedParameters ).Count () != requiredParameters.Count ) {
                 commandLineProvider.WriteLine ( "Not all required options is defined!" );
                 throw new Exception ( "Not all required options is defined!" );
