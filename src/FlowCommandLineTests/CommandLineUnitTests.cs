@@ -1307,7 +1307,7 @@ namespace FlowCommandLineTests {
             List<string> parts = ["command", "defaultValue"];
 
             //act
-            CommandLine.ParseParameters ( parts, out var command, out var parameters, out var defaultParameter );
+            CommandLine.ParseParameters ( parts, out var command, out var parameters, out var defaultParameter, asCommand: true );
 
             //assert
             Assert.Equal ( "command", command );
@@ -1387,6 +1387,33 @@ namespace FlowCommandLineTests {
             Assert.Equal ( 0, result.Parameter4.End );
             Assert.Equal ( 178.56M, result.Parameter5.Start );
             Assert.Equal ( 895.450M, result.Parameter5.End );
+        }
+
+        [Fact]
+        public void RunOptions_Success_DefaultParameter_NotFilled () {
+            //arrange
+            var messages = new List<string> ();
+            var fakeProvider = A.Fake<ICommandLineProvider> ();
+            A.CallTo ( () => fakeProvider.GetCommandLine () ).Returns ( "--parameter1=235.30 --parameter2=- --parameter3=-100.30 --parameter4=178.56-" );
+            A.CallTo ( () => fakeProvider.WriteLine ( A<string>._ ) ).Invokes ( ( string fake ) => { messages.Add ( fake ); } );
+            var commandLine = new CommandLine ( fakeProvider );
+
+            //act and assert
+            var exception = Assert.Throws<Exception> ( () => {
+                var result = commandLine
+                    .Application ( "TestApplication", "1.0.0" )
+                    .AddOptions (
+                        [
+                            FlowCommandParameter.Create(name: "Parameter1"),
+                            FlowCommandParameter.Create(name: "Parameter2"),
+                            FlowCommandParameter.Create(name: "Parameter3"),
+                            FlowCommandParameter.Create(name: "Parameter4"),
+                            FlowCommandParameter.CreateDefault(name: "Parameter5"),
+                        ]
+                    )
+                    .RunOptions<RunOptions_Success_RangeDecimalParameter_Class> ();
+            } );
+            Assert.Equal ( "Not all required parameters is defined!", exception.Message );
         }
 
     }

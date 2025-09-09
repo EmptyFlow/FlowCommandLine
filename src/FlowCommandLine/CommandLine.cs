@@ -115,7 +115,7 @@ namespace FlowCommandLine {
                 };
             }
 
-            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter );
+            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter, asCommand: true );
 
             try {
                 if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
@@ -174,7 +174,7 @@ namespace FlowCommandLine {
                 };
             }
 
-            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter );
+            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter, asCommand: true );
 
             try {
                 if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
@@ -234,7 +234,7 @@ namespace FlowCommandLine {
                 return default;
             }
 
-            ParseOptionParameters ( parts, out var parameters, out var defaultParameter );
+            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter, false );
 
             var flowOptions = new FlowOptions<T> {
                 Parameters = m_options
@@ -423,12 +423,20 @@ namespace FlowCommandLine {
 
         private bool IsHelpParameter ( string part ) => part is "-h" or "--help";
 
-        public static void ParseParameters ( List<string> parts, out string command, out Dictionary<string, string> parameters, out string defaultParameter ) {
-            command = parts.First ().ToLowerInvariant ();
-            var isHaveDefaultParameter = parts.Count > 1 && !parts.ElementAt ( 1 ).StartsWith ( "-" );
-            defaultParameter = isHaveDefaultParameter ? parts.ElementAt ( 1 ) : "";
-            parameters = parts
-                .Skip ( isHaveDefaultParameter ? 2 : 1 )
+        public static void ParseParameters ( List<string> parts, out string command, out Dictionary<string, string> parameters, out string defaultParameter, bool asCommand ) {
+            var innerParts = parts.ToList();
+            if ( asCommand ) {
+                command = innerParts.First ().ToLowerInvariant ();
+                innerParts.RemoveAt ( 0 );
+            } else {
+                command = "";
+            }
+
+            var isHaveDefaultParameter = innerParts.Count > 0 && !innerParts.ElementAt ( 0 ).StartsWith ( "-" );
+            defaultParameter = isHaveDefaultParameter ? innerParts.ElementAt ( 0 ) : "";
+
+            parameters = innerParts
+                .Skip ( isHaveDefaultParameter ? 1 : 0 )
                 .Where ( a => ( a.StartsWith ( "-" ) && a.Length > 1 ) || ( a.StartsWith ( "--" ) && a.Length > 2 ) )
                 .Select (
                     a => {
@@ -437,21 +445,6 @@ namespace FlowCommandLine {
                         if ( indexEqual == -1 ) return new { Name = clearPrefix, Value = "" };
 
                         return new { Name = clearPrefix.Substring ( 0, indexEqual ), Value = clearPrefix.Substring ( indexEqual + 1 ) };
-                    }
-                )
-                .ToDictionary ( a => a.Name, a => a.Value );
-        }
-
-        private static void ParseOptionParameters ( List<string> parts, out Dictionary<string, string> parameters, out string defaultParameter ) {
-            var isHaveDefaultParameter = parts.Count > 1 && !parts.ElementAt ( 0 ).StartsWith ( "-" );
-            defaultParameter = isHaveDefaultParameter ? parts.ElementAt ( 0 ) : "";
-            parameters = parts
-                .Skip( isHaveDefaultParameter ? 1 : 0 )
-                .Where ( a => ( a.StartsWith ( "-" ) && a.Length > 1 ) || ( a.StartsWith ( "--" ) && a.Length > 2 ) )
-                .Select (
-                    a => {
-                        var pair = a.StartsWith ( "--" ) ? a.Substring ( 2 ).Split ( "=" ) : a.Substring ( 1 ).Split ( "=" );
-                        return new { Name = pair[0], Value = pair.Length > 1 ? pair[1] : "" };
                     }
                 )
                 .ToDictionary ( a => a.Name, a => a.Value );

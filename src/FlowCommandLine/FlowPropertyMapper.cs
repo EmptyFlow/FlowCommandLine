@@ -27,6 +27,29 @@ namespace FlowCommandLine {
             return result;
         }
 
+        public static void MapParametersToType<T> ( T result, IEnumerable<PropertyInfo> properties, IEnumerable<FlowCommandParameter> flowParameters, string defaultParameterValue, ICommandLineProvider commandLineProvider, Dictionary<string, string> values ) {
+            var parameters = ParametersToDictionary ( flowParameters );
+
+            FillDefaultParameter ( flowParameters, defaultParameterValue, commandLineProvider, properties, result );
+
+            var processedParameters = new HashSet<FlowCommandParameter> ();
+
+            foreach ( var parameter in parameters ) {
+                var property = GetPropertyFromParameter ( parameter.Value, properties );
+                if ( property == null ) continue;
+                if ( processedParameters.Contains ( parameter.Value ) ) continue;
+
+                var isProcessed = SetPropertyValue ( property.PropertyType, values, parameter.Key, result, property );
+                if ( isProcessed ) processedParameters.Add ( parameter.Value );
+            }
+
+            var requiredParameters = flowParameters.Where ( a => a.Required && !a.Default ).ToList ();
+            if ( requiredParameters.Intersect ( processedParameters ).Count () != requiredParameters.Count ) {
+                commandLineProvider.WriteLine ( "Not all required parameters is defined!" );
+                throw new Exception ( "Not all required parameters is defined!" );
+            }
+        }
+
         public static void FillDefaultParameter<T> ( IEnumerable<FlowCommandParameter> parameters, string defaultParameterValue, ICommandLineProvider commandLineProvider, IEnumerable<PropertyInfo> properties, T model ) {
             var defaultParameter = parameters.Where ( a => a.Default ).FirstOrDefault ();
             if ( defaultParameter != null ) {
