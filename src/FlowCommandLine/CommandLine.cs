@@ -69,7 +69,7 @@ namespace FlowCommandLine {
                 Description = description,
                 Parameters = parameters
                     .Where (
-                        a => a != null && ( !string.IsNullOrEmpty ( a.FullName ) || !string.IsNullOrEmpty ( a.ShortName ) )
+                        a => a != null && ( !string.IsNullOrEmpty ( a.FullName ) || !string.IsNullOrEmpty ( a.ShortName ) || ( a.Default && !string.IsNullOrEmpty ( a.PropertyName ) ) )
                     )
                     .ToList ()
             };
@@ -424,7 +424,7 @@ namespace FlowCommandLine {
         private bool IsHelpParameter ( string part ) => part is "-h" or "--help";
 
         public static void ParseParameters ( List<string> parts, out string command, out Dictionary<string, string> parameters, out string defaultParameter, bool asCommand ) {
-            var innerParts = parts.ToList();
+            var innerParts = parts.ToList ();
             if ( asCommand ) {
                 command = innerParts.First ().ToLowerInvariant ();
                 innerParts.RemoveAt ( 0 );
