@@ -1,7 +1,7 @@
 [![CI](https://github.com/EmptyFlow/FlowCommandLine/actions/workflows/cipackage.yml/badge.svg)](https://github.com/EmptyFlow/FlowCommandLine/actions/workflows/cipackage.yml) [![nugeticon](https://img.shields.io/badge/nuget-available-blue)](https://www.nuget.org/packages/FlowCommandLine)
 
 # FlowCommandLine
-A fast and simple command line parser that works in two modes: command-based (e.g. `git commit ...`) or parameters-only. Parsing can be happened to any model class or record with parameterless constructor.
+FlowCommandLine is a C# library available on Nuget that is a fast and simple command line parser that works in two modes: command-based (e.g. `git commit ...`) or parameters-only. Parsing can be happened to any model class or record with parameterless constructor.
 It support modern dotnet core runtimes (net8+), compilation in NativeAot. It supported auto documentation for commands and parameters.
 Lot of types of properties [is supported](https://github.com/EmptyFlow/FlowCommandLine/wiki/Supported-mappings-types).
 By default, the output will be to the system console, but can be redefined to any of your case - instead `CommandLine.Console ()` you can use `new CommandLine (new MyConsoleCommandLineProvider())` where `MyConsoleCommandLineProvider` it is you class which is implement `ICommandLineProvider` interface.
@@ -27,20 +27,10 @@ CommandLine.Console ()
         },
         "Command description", // command description :)
         new List<FlowCommandParameter> { // adjust command parameters
-            new FlowCommandParameter {
-                FullName = "param1", // for parameter in format --param1
-                ShortName = "p1, // for parameter in format -p1
-                PropertyName = "Param1" // it 
-                Description = "parameter description",
-                Required = true, // parameter is required
-            },
-            FlowCommandParameter.CreateRequired("p3", "param3", "parameter description"), // use factory method for required parameter
-            new FlowCommandParameter {
-                FullName = "param2", // full name is required property, other properties ShortName or PropertyName can be inferred from FullName
-                Description = "parameter2 description",
-                Required = false,
-            },
+            FlowCommandParameter.CreateRequired("p1", "param1", "parameter 1 description"), // use factory methods for required parameter
+            FlowCommandParameter.CreateRequired("p3", "param3", "parameter 3 description"), 
             FlowCommandParameter.Create("p4", "param4", "parameter description"), // use factory method for non required parameter
+            FlowCommandParameter.Create("p2", "param2", "parameter2 description")
         }
     )
     .RunCommand ();
