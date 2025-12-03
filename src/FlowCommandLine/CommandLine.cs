@@ -360,17 +360,19 @@ namespace FlowCommandLine {
 
                         m_commandLineProvider.WriteLine ( $"  {name}{value.Description}" );
                     }
+                } else {
+                    ShowApplicationUsage ();
                 }
             } else {
                 if ( !parts.Any () ) return;
 
-                ShowApplicationUsage ();
-
                 var command = parts.First ();
                 if ( m_commands.ContainsKey ( command ) || m_asyncCommands.ContainsKey ( command ) ) {
                     m_commandLineProvider.WriteLine ( $" " );
-                    ShowHelpBySingleCommand ( parts );
+                    if (!ShowHelpBySingleCommand ( parts ) ) ShowApplicationUsage ();
                 } else {
+                    ShowApplicationUsage ();
+
                     m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
                     m_commandLineProvider.WriteLine ( "Command is incorrect!" );
                 }
