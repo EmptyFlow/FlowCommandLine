@@ -251,7 +251,30 @@ namespace FlowCommandLine {
         }
 
         private void ShowParameters ( List<FlowCommandParameter> commandParameters ) {
-            if ( commandParameters.Any ( a => a.Required ) ) {
+            var defaultParameters = commandParameters.Where ( a => a.Default ).ToArray ();
+            if ( defaultParameters.Any () ) {
+                var allDefaultParameters = string.Join (
+                    " ",
+                    defaultParameters
+                    .Select (
+                        a =>
+                            string.Join ( '/', new List<string> { a.ShortName, a.FullName, a.PropertyName }.Where ( a => !string.IsNullOrEmpty ( a ) ) )
+                    )
+                    .ToArray ()
+                );
+                m_commandLineProvider.WriteLine ( $"Default parameters in follow order: {allDefaultParameters}" );
+                foreach ( var defaultParameter in defaultParameters ) {
+                    m_commandLineProvider.WriteLine (
+                        "  " + string.Join (
+                            '/',
+                            new List<string> { defaultParameter.ShortName, defaultParameter.FullName, defaultParameter.PropertyName }
+                                .Where ( a => !string.IsNullOrEmpty ( a ) )
+                        ) + " " + defaultParameter.Description
+                    );
+                }
+                m_commandLineProvider.WriteLine ( "" );
+            }
+            if ( commandParameters.Any ( a => a.Required && !a.Default ) ) {
                 m_commandLineProvider.WriteLine ( "The following arguments are available:" );
                 var requiredParameters = commandParameters
                     .Where ( a => a.Required )
@@ -291,6 +314,13 @@ namespace FlowCommandLine {
             }
         }
 
+        private void ShowApplicationUsage () {
+            if ( !string.IsNullOrEmpty ( m_applicationExecutable ) ) {
+                m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} [<command>] [<parameters>]" );
+                m_commandLineProvider.WriteLine ( " " );
+            }
+        }
+
         /// <summary>
         /// Show application help and a list of available commands.
         /// </summary>
@@ -303,13 +333,11 @@ namespace FlowCommandLine {
                     m_commandLineProvider.WriteLine ( m_applicationDescription );
                     m_commandLineProvider.WriteLine ( " " );
                 }
-                if ( !string.IsNullOrEmpty ( m_applicationExecutable ) ) {
-                    m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} [<command>] [<parameters>]" );
-                    m_commandLineProvider.WriteLine ( " " );
-                }
 
                 if ( m_commands.Any () || m_asyncCommands.Any () ) {
                     if ( parts.Any ( IsHelpParameter ) && ShowHelpBySingleCommand ( parts ) ) return;
+
+                    ShowApplicationUsage ();
 
                     var maximumLength = m_commands
                         .Select ( a => a.Key )
@@ -335,6 +363,8 @@ namespace FlowCommandLine {
                 }
             } else {
                 if ( !parts.Any () ) return;
+
+                ShowApplicationUsage ();
 
                 var command = parts.First ();
                 if ( m_commands.ContainsKey ( command ) || m_asyncCommands.ContainsKey ( command ) ) {
@@ -363,16 +393,23 @@ namespace FlowCommandLine {
             if ( m_options.Any () ) ShowParameters ( m_options );
         }
 
+        private void ShowCommandUsage ( string command, bool haveDefault ) {
+            m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} {command}{( haveDefault ? " [default parameters]" : "" )} [<parameters>]" );
+            m_commandLineProvider.WriteLine ( " " );
+        }
+
         private bool ShowHelpBySingleCommand ( List<string> parts ) {
             var command = parts.First ();
 
             if ( m_commands.ContainsKey ( command ) ) {
                 var selectedCommand = m_commands[command];
+                ShowCommandUsage ( command, selectedCommand.Parameters.Any ( a => a.Default ) );
                 ShowCommandHelp ( selectedCommand.Description, selectedCommand.Parameters );
                 return true;
             }
             if ( m_asyncCommands.ContainsKey ( command ) ) {
                 var selectedCommand = m_asyncCommands[command];
+                ShowCommandUsage ( command, selectedCommand.Parameters.Any ( a => a.Default ) );
                 ShowCommandHelp ( selectedCommand.Description, selectedCommand.Parameters );
                 return true;
             }

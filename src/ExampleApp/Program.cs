@@ -1,4 +1,5 @@
 ﻿using FlowCommandLine;
+using static FlowCommandLine.FlowCommandParameter;
 
 await CommandLine.Console ()
     .Application ( "Console Application", "1.0.0", "Application full description.", "Copyright (c) Macroloft All right Reserved", "conapp" )
@@ -9,10 +10,10 @@ await CommandLine.Console ()
             Console.WriteLine ( "Param2: " + parameters.Param2 );
         },
         "Command description",
-        new List<FlowCommandParameter> {
-            FlowCommandParameter.CreateRequired(alias: "param1", help: "parameter description"),
-            FlowCommandParameter.Create(alias: "param2", help: "parameter2 description"),
-        }
+        [
+            CreateDefault(alias: "param1", help: "parameter description"),
+            Create(alias: "param2", help: "parameter2 description"),
+        ]
     )
     .RunCommandAsync ();
 
