@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<NativeAot>enable</NativeAot>
@@ -20,10 +20,7 @@
 		<IsTrimmable>true</IsTrimmable>
 		<PublishTrimmed>true</PublishTrimmed>
 		<PackageReleaseNotes>
-			Added supported default command parameter or default option
-			Added FlowCommandParameter.CreateDefault method for create default parameter
-			Added FlowCommandParameter.Default property for store make if parameter is default or not
-			Added CommandLine.AddOptions method for get collection of options (from factory etc)
+			Added support for net10
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
