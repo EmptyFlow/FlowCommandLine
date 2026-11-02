@@ -3,494 +3,495 @@ using System.Text;
 
 namespace FlowCommandLine {
 
-    public sealed class CommandLine {
-
-        private ICommandLineProvider m_commandLineProvider;
-
-        private string m_commandLine = "";
-
-        private string m_applicationName = "";
-
-        private string m_applicationExecutable = "";
-
-        private string m_applicationVersion = "";
-
-        private string m_applicationDescription = "";
-
-        private string m_applicationCopyright = "";
-
-        private Dictionary<string, FlowCommand> m_commands = new ();
-
-        private Dictionary<string, FlowAsyncCommand> m_asyncCommands = new ();
-
-        private List<FlowCommandParameter> m_options = new ();
-
-        /// <summary>
-        /// Create instance of command line compiler and adjust string with command line.
-        /// </summary>
-        /// <param name="commandLine">String containing command line.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public CommandLine ( ICommandLineProvider provider ) {
-            if ( provider == null ) throw new ArgumentNullException ( nameof ( provider ) );
-            m_commandLineProvider = provider;
-
-            m_commandLine = m_commandLineProvider.GetCommandLine () ?? throw new ArgumentNullException ( "GetCommandLine" );
-            m_commandLine = m_commandLine.Trim ();
-        }
-
-        /// <summary>
-        /// Setup application information.
-        /// </summary>
-        /// <param name="applicationName">Application name.</param>
-        /// <param name="version">Version.</param>
-        /// <param name="description">Description.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public CommandLine Application ( string applicationName, string version, string description = "", string copyright = "", string applicationExecutable = "" ) {
-            m_applicationName = applicationName ?? throw new ArgumentNullException ( nameof ( applicationName ) );
-            m_applicationVersion = version ?? throw new ArgumentNullException ( nameof ( version ) );
-            m_applicationDescription = description ?? "";
-            m_applicationCopyright = copyright ?? "";
-            m_applicationExecutable = applicationExecutable ?? "";
-
-            return this;
-        }
-
-        /// <summary>
-        /// Add command with synchronious handler.
-        /// </summary>
-        /// <param name="name">The name of the command to be processed from the command line.</param>
-        /// <param name="delegate">Delegate that will be called in case if user select this command in console.</param>
-        /// <param name="description">A human-readable description of the command.</param>
-        /// <param name="parameters">Command parameters.</param>
-        public CommandLine AddCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.All )] T> ( string name, FlowCommandLineCommandDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
-            var lowerName = name.ToLowerInvariant ();
-            m_commands[lowerName] = new FlowCommandDelegate<T> {
-                Delegate = @delegate,
-                Description = description,
-                Parameters = parameters
-                    .Where (
-                        a => a != null && ( !string.IsNullOrEmpty ( a.FullName ) || !string.IsNullOrEmpty ( a.ShortName ) || ( a.Default && !string.IsNullOrEmpty ( a.PropertyName ) ) )
-                    )
-                    .ToList ()
-            };
-
-            return this;
-        }
-
-        public CommandLine AddAsyncCommand<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.All )] T> ( string name, FlowCommandLineCommandAsyncDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
-            var lowerName = name.ToLowerInvariant ();
-            m_asyncCommands[lowerName] = new FlowCommandAsyncDelegate<T> {
-                Delegate = @delegate,
-                Description = description,
-                Parameters = parameters
-                    .Where ( a => a != null && !string.IsNullOrEmpty ( a.FullName ) )
-                    .ToList ()
-            };
-
-            return this;
-        }
-
-        /// <summary>
-        /// Run the command from the command line.
-        /// </summary>
-        public async Task<FlowCommandResult> RunCommandAsync () {
-            if ( IsVersion () ) {
-                ShowVersion ();
-
-                return new FlowCommandResult {
-                    EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                    CommandHandled = false,
-                    Handled = true
-                };
-            }
-
-            var parts = GetParts ();
-            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
-                ShowHelp ( parts, true );
-
-                return new FlowCommandResult {
-                    EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                    CommandHandled = false,
-                    Handled = parts.Any ()
-                };
-            }
-
-            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter, asCommand: true );
-
-            try {
-                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                    flowCommand.Execute ( parameters, m_commandLineProvider, defaultParameter );
-
-                    return new FlowCommandResult {
-                        EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                        CommandHandled = true,
-                        Handled = false
-                    };
-                }
-                if ( m_asyncCommands.TryGetValue ( command, out var flowAsyncCommand ) ) {
-                    await flowAsyncCommand.Execute ( parameters, m_commandLineProvider, defaultParameter );
-                    return new FlowCommandResult {
-                        EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                        CommandHandled = true,
-                        Handled = false
-                    };
-                }
-            } catch {
-            }
-
-            ShowHelp ( parts );
-
-            return new FlowCommandResult {
-                EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                CommandHandled = false,
-                Handled = false
-            };
-        }
-
-        /// <summary>
-        /// Run the command from the command line.
-        /// </summary>
-        public FlowCommandResult RunCommand () {
-            if ( m_asyncCommands.Any () ) throw new ArgumentException ( "You have asynchronized commands, you need to use RunCommandAsync method inside!" );
-
-            if ( IsVersion () ) {
-                ShowVersion ();
-
-                return new FlowCommandResult {
-                    EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                    CommandHandled = false,
-                    Handled = true
-                };
-            }
-
-            var parts = GetParts ();
-            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
-                ShowHelp ( parts, true );
-
-                return new FlowCommandResult {
-                    EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                    CommandHandled = false,
-                    Handled = parts.Any ()
-                };
-            }
-
-            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter, asCommand: true );
-
-            try {
-                if ( m_commands.TryGetValue ( command, out var flowCommand ) ) {
-                    flowCommand.Execute ( parameters, m_commandLineProvider, defaultParameter );
-
-                    return new FlowCommandResult {
-                        EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                        CommandHandled = true,
-                        Handled = false
-                    };
-                }
-            } catch {
-            }
-
-            ShowHelp ( parts );
-
-            return new FlowCommandResult {
-                EmptyInput = string.IsNullOrEmpty ( m_commandLine ),
-                CommandHandled = false,
-                Handled = false
-            };
-        }
-
-        public CommandLine AddOption ( string shortName = "", string fullName = "", string description = "", string propertyName = "", bool required = false ) {
-            m_options.Add (
-                new FlowCommandParameter {
-                    Description = description,
-                    FullName = fullName,
-                    ShortName = shortName,
-                    Required = required,
-                    PropertyName = propertyName
-                }
-            );
-
-            return this;
-        }
-
-        public CommandLine AddOptions ( IEnumerable<FlowCommandParameter> parameters ) {
-            m_options.AddRange ( parameters );
-
-            return this;
-        }
-
-
-        /// <summary>
-        /// Run the command from the command line.
-        /// </summary>
-        public T? RunOptions<[DynamicallyAccessedMembers ( DynamicallyAccessedMemberTypes.All )] T> () where T : new() {
-            if ( IsVersion () ) {
-                ShowVersion ();
-                return default;
-            }
-
-            var parts = GetParts ();
-            if ( string.IsNullOrEmpty ( m_commandLine ) || !parts.Any () || IsHelpParameter ( m_commandLine ) || parts.Any ( IsHelpParameter ) ) {
-                ShowOptionsHelp ();
-                return default;
-            }
-
-            ParseParameters ( parts, out var command, out var parameters, out var defaultParameter, false );
-
-            var flowOptions = new FlowOptions<T> {
-                Parameters = m_options
-            };
-            return flowOptions.MapParametersToType ( parameters, m_commandLineProvider, defaultParameter );
-        }
-
-        private void ShowCommandHelp ( string description, List<FlowCommandParameter> parameters ) {
-            if ( !string.IsNullOrEmpty ( description ) ) {
-                m_commandLineProvider.WriteLine ( description );
-                m_commandLineProvider.WriteLine ( " " );
-            }
-            ShowParameters ( parameters );
-        }
-
-        private void ShowParameters ( List<FlowCommandParameter> commandParameters ) {
-            var defaultParameters = commandParameters.Where ( a => a.Default ).ToArray ();
-            if ( defaultParameters.Any () ) {
-                var allDefaultParameters = string.Join (
-                    " ",
-                    defaultParameters
-                    .Select (
-                        a =>
-                            string.Join ( '/', new List<string> { a.ShortName, a.FullName, a.PropertyName }.Where ( a => !string.IsNullOrEmpty ( a ) ) )
-                    )
-                    .ToArray ()
-                );
-                m_commandLineProvider.WriteLine ( $"Default parameters in follow order: {allDefaultParameters}" );
-                foreach ( var defaultParameter in defaultParameters ) {
-                    m_commandLineProvider.WriteLine (
-                        "  " + string.Join (
-                            '/',
-                            new List<string> { defaultParameter.ShortName, defaultParameter.FullName, defaultParameter.PropertyName }
-                                .Where ( a => !string.IsNullOrEmpty ( a ) )
-                        ) + " " + defaultParameter.Description
-                    );
-                }
-                m_commandLineProvider.WriteLine ( "" );
-            }
-            if ( commandParameters.Any ( a => a.Required && !a.Default ) ) {
-                m_commandLineProvider.WriteLine ( "The following arguments are available:" );
-                var requiredParameters = commandParameters
-                    .Where ( a => a.Required )
-                    .ToList ();
-                var maximumLength = requiredParameters
-                    .Select ( a => ( !string.IsNullOrEmpty ( a.FullName ) ? a.FullName.Count () + 2 : 0 ) + ( !string.IsNullOrEmpty ( a.ShortName ) ? a.ShortName.Count () + 1 : 0 ) )
-                    .Max ();
-                foreach ( var parameter in requiredParameters ) {
-                    var parameters = new List<string> ();
-                    if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
-                    if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
-
-                    var parametersValue = string.Join ( ' ', parameters );
-                    if ( parametersValue.Length < maximumLength ) parametersValue += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - parametersValue.Length ) );
-
-                    m_commandLineProvider.WriteLine ( $"  {parametersValue} {parameter.Description}" );
-                }
-            }
-            if ( commandParameters.Any ( a => !a.Required ) ) {
-                m_commandLineProvider.WriteLine ( "The following options are available:" );
-
-                var nonRequiredParameters = commandParameters.Where ( a => !a.Required );
-                var maximumLength = nonRequiredParameters
-                    .Select ( a => ( !string.IsNullOrEmpty ( a.FullName ) ? a.FullName.Count () + 2 : 0 ) + ( !string.IsNullOrEmpty ( a.ShortName ) ? a.ShortName.Count () + 1 : 0 ) )
-                    .Max ();
-
-                foreach ( var parameter in nonRequiredParameters ) {
-                    var parameters = new List<string> ();
-                    if ( !string.IsNullOrEmpty ( parameter.FullName ) ) parameters.Add ( $"--{parameter.FullName}" );
-                    if ( !string.IsNullOrEmpty ( parameter.ShortName ) ) parameters.Add ( $"-{parameter.ShortName}" );
-
-                    var parametersValue = string.Join ( ' ', parameters );
-
-
-                    m_commandLineProvider.WriteLine ( $"  {string.Join ( ' ', parameters )} {parameter.Description}" );
-                }
-            }
-        }
-
-        private void ShowApplicationUsage () {
-            if ( !string.IsNullOrEmpty ( m_applicationExecutable ) ) {
-                m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} [<command>] [<parameters>]" );
-                m_commandLineProvider.WriteLine ( " " );
-            }
-        }
-
-        /// <summary>
-        /// Show application help and a list of available commands.
-        /// </summary>
-        private void ShowHelp ( List<string> parts, bool fullInfo = false ) {
-            if ( fullInfo ) {
-                m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
-                if ( !string.IsNullOrEmpty ( m_applicationCopyright ) ) m_commandLineProvider.WriteLine ( m_applicationCopyright );
-                m_commandLineProvider.WriteLine ( " " );
-                if ( !string.IsNullOrEmpty ( m_applicationDescription ) ) {
-                    m_commandLineProvider.WriteLine ( m_applicationDescription );
-                    m_commandLineProvider.WriteLine ( " " );
-                }
-
-                if ( m_commands.Any () || m_asyncCommands.Any () ) {
-                    if ( parts.Any ( IsHelpParameter ) && ShowHelpBySingleCommand ( parts ) ) return;
-
-                    ShowApplicationUsage ();
-
-                    var maximumLength = m_commands
-                        .Select ( a => a.Key )
-                        .Concat ( m_asyncCommands.Select ( b => b.Key ) )
-                        .Select ( a => a.Length )
-                        .Max () + 1;
-                    m_commandLineProvider.WriteLine ( "The following commands are available:" );
-
-                    foreach ( var command in m_commands ) {
-                        var name = command.Key;
-                        var value = command.Value;
-                        if ( name.Length < maximumLength ) name += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - name.Length ) );
-
-                        m_commandLineProvider.WriteLine ( $"  {name}{value.Description}" );
-                    }
-                    foreach ( var asyncCommand in m_asyncCommands ) {
-                        var name = asyncCommand.Key;
-                        var value = asyncCommand.Value;
-                        if ( name.Length < maximumLength ) name += string.Join ( "", Enumerable.Repeat ( ' ', maximumLength - name.Length ) );
-
-                        m_commandLineProvider.WriteLine ( $"  {name}{value.Description}" );
-                    }
-                } else {
-                    ShowApplicationUsage ();
-                }
-            } else {
-                if ( !parts.Any () ) return;
-
-                var command = parts.First ();
-                if ( m_commands.ContainsKey ( command ) || m_asyncCommands.ContainsKey ( command ) ) {
-                    m_commandLineProvider.WriteLine ( $" " );
-                    if (!ShowHelpBySingleCommand ( parts ) ) ShowApplicationUsage ();
-                } else {
-                    ShowApplicationUsage ();
-
-                    m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
-                    m_commandLineProvider.WriteLine ( "Command is incorrect!" );
-                }
-            }
-        }
-
-        private void ShowOptionsHelp () {
-            m_commandLineProvider.WriteLine ( $"{m_applicationName} version {m_applicationVersion}" );
-            if ( !string.IsNullOrEmpty ( m_applicationCopyright ) ) m_commandLineProvider.WriteLine ( m_applicationCopyright );
-            m_commandLineProvider.WriteLine ( " " );
-            if ( !string.IsNullOrEmpty ( m_applicationDescription ) ) {
-                m_commandLineProvider.WriteLine ( m_applicationDescription );
-                m_commandLineProvider.WriteLine ( " " );
-            }
-            if ( !string.IsNullOrEmpty ( m_applicationExecutable ) ) {
-                m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} [<options>]" );
-                m_commandLineProvider.WriteLine ( " " );
-            }
-
-            if ( m_options.Any () ) ShowParameters ( m_options );
-        }
-
-        private void ShowCommandUsage ( string command, bool haveDefault ) {
-            m_commandLineProvider.WriteLine ( $"usage: {m_applicationExecutable} {command}{( haveDefault ? " [default parameters]" : "" )} [<parameters>]" );
-            m_commandLineProvider.WriteLine ( " " );
-        }
-
-        private bool ShowHelpBySingleCommand ( List<string> parts ) {
-            var command = parts.First ();
-
-            if ( m_commands.ContainsKey ( command ) ) {
-                var selectedCommand = m_commands[command];
-                ShowCommandUsage ( command, selectedCommand.Parameters.Any ( a => a.Default ) );
-                ShowCommandHelp ( selectedCommand.Description, selectedCommand.Parameters );
-                return true;
-            }
-            if ( m_asyncCommands.ContainsKey ( command ) ) {
-                var selectedCommand = m_asyncCommands[command];
-                ShowCommandUsage ( command, selectedCommand.Parameters.Any ( a => a.Default ) );
-                ShowCommandHelp ( selectedCommand.Description, selectedCommand.Parameters );
-                return true;
-            }
-
-            return false;
-        }
-
-        private List<string> GetParts () {
-            var result = new List<string> ();
-            var currentPart = new StringBuilder ();
-            var parameterStarted = false;
-            char? previousCharacter = null;
-            int currentIndex = -1;
-            foreach ( var character in m_commandLine ) {
-                if ( currentIndex > -1 ) previousCharacter = m_commandLine[currentIndex];
-                currentIndex++;
-
-                if ( character == ' ' && !parameterStarted ) {
-                    result.Add ( currentPart.ToString () );
-                    currentPart.Clear ();
-                    continue;
-                }
-                if ( character == '-' && ( previousCharacter == ' ' || currentIndex == 0 ) && !parameterStarted ) {
-                    parameterStarted = true;
-                    result.Add ( currentPart.ToString () );
-                    currentPart.Clear ();
-                }
-                if ( character == '-' && previousCharacter == ' ' && parameterStarted && currentPart.Length > 2 ) {
-                    parameterStarted = true;
-                    result.Add ( currentPart.ToString () );
-                    currentPart.Clear ();
-                }
-
-                currentPart.Append ( character );
-            }
-
-            if ( currentPart.Length > 0 ) result.Add ( currentPart.ToString () );
-
-            return result
-                .Where ( a => !string.IsNullOrEmpty ( a ) )
-                .Select ( a => a.Trim () )
-                .ToList ();
-        }
-
-        private void ShowVersion () => m_commandLineProvider.WriteLine ( $"{m_applicationVersion}" );
-
-        private bool IsVersion () => m_commandLine is "-v" or "--version";
-
-        private bool IsHelpParameter ( string part ) => part is "-h" or "--help";
-
-        public static void ParseParameters ( List<string> parts, out string command, out Dictionary<string, string> parameters, out string defaultParameter, bool asCommand ) {
-            var innerParts = parts.ToList ();
-            if ( asCommand ) {
-                command = innerParts.First ().ToLowerInvariant ();
-                innerParts.RemoveAt ( 0 );
-            } else {
-                command = "";
-            }
-
-            var isHaveDefaultParameter = innerParts.Count > 0 && !innerParts.ElementAt ( 0 ).StartsWith ( "-" );
-            defaultParameter = isHaveDefaultParameter ? innerParts.ElementAt ( 0 ) : "";
-
-            parameters = innerParts
-                .Skip ( isHaveDefaultParameter ? 1 : 0 )
-                .Where ( a => ( a.StartsWith ( "-" ) && a.Length > 1 ) || ( a.StartsWith ( "--" ) && a.Length > 2 ) )
-                .Select (
-                    a => {
-                        var clearPrefix = a.StartsWith ( "--" ) ? a.Substring ( 2 ) : a.Substring ( 1 );
-                        var indexEqual = clearPrefix.IndexOf ( "=" );
-                        if ( indexEqual == -1 ) return new { Name = clearPrefix, Value = "" };
-
-                        return new { Name = clearPrefix.Substring ( 0, indexEqual ), Value = clearPrefix.Substring ( indexEqual + 1 ) };
-                    }
-                )
-                .ToDictionary ( a => a.Name, a => a.Value );
-        }
-
-        public static CommandLine Console () => new CommandLine ( new ConsoleCommandLineProvider () );
-
-    }
+	public sealed class CommandLine {
+
+		private ICommandLineProvider m_commandLineProvider;
+
+		private string m_commandLine = "";
+
+		private string m_applicationName = "";
+
+		private string m_applicationExecutable = "";
+
+		private string m_applicationVersion = "";
+
+		private string m_applicationDescription = "";
+
+		private string m_applicationCopyright = "";
+
+		private Dictionary<string, FlowCommand> m_commands = new ();
+
+		private Dictionary<string, FlowAsyncCommand> m_asyncCommands = new ();
+
+		private List<FlowCommandParameter> m_options = new ();
+
+		/// <summary>
+		/// Create instance of command line compiler and adjust string with command line.
+		/// </summary>
+		/// <param name="commandLine">String containing command line.</param>
+		/// <exception cref="ArgumentNullException"></exception>
+		public CommandLine ( ICommandLineProvider provider ) {
+			if (provider == null) throw new ArgumentNullException (nameof (provider));
+			m_commandLineProvider = provider;
+
+			m_commandLine = m_commandLineProvider.GetCommandLine () ?? throw new ArgumentNullException ("GetCommandLine");
+			m_commandLine = m_commandLine.Trim ();
+		}
+
+		/// <summary>
+		/// Setup application information.
+		/// </summary>
+		/// <param name="applicationName">Application name.</param>
+		/// <param name="version">Version.</param>
+		/// <param name="description">Description.</param>
+		/// <exception cref="ArgumentNullException"></exception>
+		public CommandLine Application ( string applicationName, string version, string description = "", string copyright = "", string applicationExecutable = "" ) {
+			m_applicationName = applicationName ?? throw new ArgumentNullException (nameof (applicationName));
+			m_applicationVersion = version ?? throw new ArgumentNullException (nameof (version));
+			m_applicationDescription = description ?? "";
+			m_applicationCopyright = copyright ?? "";
+			m_applicationExecutable = applicationExecutable ?? "";
+
+			return this;
+		}
+
+		/// <summary>
+		/// Add command with synchronious handler.
+		/// </summary>
+		/// <param name="name">The name of the command to be processed from the command line.</param>
+		/// <param name="delegate">Delegate that will be called in case if user select this command in console.</param>
+		/// <param name="description">A human-readable description of the command.</param>
+		/// <param name="parameters">Command parameters.</param>
+		public CommandLine AddCommand<[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)] T> ( string name, FlowCommandLineCommandDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
+			var lowerName = name.ToLowerInvariant ();
+			m_commands [lowerName] = new FlowCommandDelegate<T> {
+				Delegate = @delegate,
+				Description = description,
+				Parameters = parameters
+					.Where (
+						a => a != null && (!string.IsNullOrEmpty (a.FullName) || !string.IsNullOrEmpty (a.ShortName) || (a.Default && !string.IsNullOrEmpty (a.PropertyName)))
+					)
+					.ToList ()
+			};
+
+			return this;
+		}
+
+		public CommandLine AddAsyncCommand<[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)] T> ( string name, FlowCommandLineCommandAsyncDelegate<T> @delegate, string description, IEnumerable<FlowCommandParameter> parameters ) where T : new() {
+			var lowerName = name.ToLowerInvariant ();
+			m_asyncCommands [lowerName] = new FlowCommandAsyncDelegate<T> {
+				Delegate = @delegate,
+				Description = description,
+				Parameters = parameters
+					.Where (a => a != null && !string.IsNullOrEmpty (a.FullName))
+					.ToList ()
+			};
+
+			return this;
+		}
+
+		/// <summary>
+		/// Run the command from the command line.
+		/// </summary>
+		public async Task<FlowCommandResult> RunCommandAsync () {
+			if (IsVersion ()) {
+				ShowVersion ();
+
+				return new FlowCommandResult {
+					EmptyInput = string.IsNullOrEmpty (m_commandLine),
+					CommandHandled = false,
+					Handled = true
+				};
+			}
+
+			var parts = GetParts ();
+			if (string.IsNullOrEmpty (m_commandLine) || !parts.Any () || IsHelpParameter (m_commandLine) || parts.Any (IsHelpParameter)) {
+				ShowHelp (parts, true);
+
+				return new FlowCommandResult {
+					EmptyInput = string.IsNullOrEmpty (m_commandLine),
+					CommandHandled = false,
+					Handled = parts.Any ()
+				};
+			}
+
+			ParseParameters (parts, out var command, out var parameters, out var defaultParameter, asCommand: true);
+
+			try {
+				if (m_commands.TryGetValue (command, out var flowCommand)) {
+					flowCommand.Execute (parameters, m_commandLineProvider, defaultParameter);
+
+					return new FlowCommandResult {
+						EmptyInput = string.IsNullOrEmpty (m_commandLine),
+						CommandHandled = true,
+						Handled = false
+					};
+				}
+				if (m_asyncCommands.TryGetValue (command, out var flowAsyncCommand)) {
+					await flowAsyncCommand.Execute (parameters, m_commandLineProvider, defaultParameter);
+					return new FlowCommandResult {
+						EmptyInput = string.IsNullOrEmpty (m_commandLine),
+						CommandHandled = true,
+						Handled = false
+					};
+				}
+			} catch {
+			}
+
+			ShowHelp (parts);
+
+			return new FlowCommandResult {
+				EmptyInput = string.IsNullOrEmpty (m_commandLine),
+				CommandHandled = false,
+				Handled = false
+			};
+		}
+
+		/// <summary>
+		/// Run the command from the command line.
+		/// </summary>
+		public FlowCommandResult RunCommand () {
+			if (m_asyncCommands.Any ()) throw new ArgumentException ("You have asynchronized commands, you need to use RunCommandAsync method inside!");
+
+			if (IsVersion ()) {
+				ShowVersion ();
+
+				return new FlowCommandResult {
+					EmptyInput = string.IsNullOrEmpty (m_commandLine),
+					CommandHandled = false,
+					Handled = true
+				};
+			}
+
+			var parts = GetParts ();
+			if (string.IsNullOrEmpty (m_commandLine) || !parts.Any () || IsHelpParameter (m_commandLine) || parts.Any (IsHelpParameter)) {
+				ShowHelp (parts, true);
+
+				return new FlowCommandResult {
+					EmptyInput = string.IsNullOrEmpty (m_commandLine),
+					CommandHandled = false,
+					Handled = parts.Any ()
+				};
+			}
+
+			ParseParameters (parts, out var command, out var parameters, out var defaultParameter, asCommand: true);
+
+			try {
+				if (m_commands.TryGetValue (command, out var flowCommand)) {
+					flowCommand.Execute (parameters, m_commandLineProvider, defaultParameter);
+
+					return new FlowCommandResult {
+						EmptyInput = string.IsNullOrEmpty (m_commandLine),
+						CommandHandled = true,
+						Handled = false
+					};
+				}
+			} catch {
+			}
+
+			ShowHelp (parts);
+
+			return new FlowCommandResult {
+				EmptyInput = string.IsNullOrEmpty (m_commandLine),
+				CommandHandled = false,
+				Handled = false
+			};
+		}
+
+		public CommandLine AddOption ( string shortName = "", string fullName = "", string description = "", string propertyName = "", bool required = false ) {
+			m_options.Add (
+				new FlowCommandParameter {
+					Description = description,
+					FullName = fullName,
+					ShortName = shortName,
+					Required = required,
+					PropertyName = propertyName
+				}
+			);
+
+			return this;
+		}
+
+		public CommandLine AddOptions ( IEnumerable<FlowCommandParameter> parameters ) {
+			m_options.AddRange (parameters);
+
+			return this;
+		}
+
+
+		/// <summary>
+		/// Run the command from the command line.
+		/// </summary>
+		public T? RunOptions<[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)] T> () where T : new() {
+			if (IsVersion ()) {
+				ShowVersion ();
+				return default;
+			}
+
+			var parts = GetParts ();
+			if (string.IsNullOrEmpty (m_commandLine) || !parts.Any () || IsHelpParameter (m_commandLine) || parts.Any (IsHelpParameter)) {
+				ShowOptionsHelp ();
+				return default;
+			}
+
+			ParseParameters (parts, out var command, out var parameters, out var defaultParameter, false);
+
+			var flowOptions = new FlowOptions<T> {
+				Parameters = m_options
+			};
+			return flowOptions.MapParametersToType (parameters, m_commandLineProvider, defaultParameter);
+		}
+
+		private void ShowCommandHelp ( string description, List<FlowCommandParameter> parameters ) {
+			if (!string.IsNullOrEmpty (description)) {
+				m_commandLineProvider.WriteLine (description);
+				m_commandLineProvider.WriteLine (" ");
+			}
+			ShowParameters (parameters);
+		}
+
+		private void ShowParameters ( List<FlowCommandParameter> commandParameters ) {
+			var defaultParameters = commandParameters.Where (a => a.Default).ToArray ();
+			if (defaultParameters.Any ()) {
+				var allDefaultParameters = string.Join (
+					" ",
+					defaultParameters
+					.Select (
+						a =>
+							string.Join ('/', new List<string> { a.ShortName, a.FullName, a.PropertyName }.Where (a => !string.IsNullOrEmpty (a)))
+					)
+					.ToArray ()
+				);
+				m_commandLineProvider.WriteLine ($"Default parameters in follow order: {allDefaultParameters}");
+				foreach (var defaultParameter in defaultParameters) {
+					m_commandLineProvider.WriteLine (
+						"  " + string.Join (
+							'/',
+							new List<string> { defaultParameter.ShortName, defaultParameter.FullName, defaultParameter.PropertyName }
+								.Where (a => !string.IsNullOrEmpty (a))
+						) + " " + defaultParameter.Description
+					);
+				}
+				m_commandLineProvider.WriteLine ("");
+			}
+			if (commandParameters.Any (a => a.Required && !a.Default)) {
+				m_commandLineProvider.WriteLine ("The following arguments are available:");
+				var requiredParameters = commandParameters
+					.Where (a => a.Required)
+					.ToList ();
+				var maximumLength = requiredParameters
+					.Select (a => (!string.IsNullOrEmpty (a.FullName) ? a.FullName.Count () + 2 : 0) + (!string.IsNullOrEmpty (a.ShortName) ? a.ShortName.Count () + 1 : 0))
+					.Max ();
+				foreach (var parameter in requiredParameters) {
+					var parameters = new List<string> ();
+					if (!string.IsNullOrEmpty (parameter.FullName)) parameters.Add ($"--{parameter.FullName}");
+					if (!string.IsNullOrEmpty (parameter.ShortName)) parameters.Add ($"-{parameter.ShortName}");
+
+					var parametersValue = string.Join (' ', parameters);
+					if (parametersValue.Length < maximumLength) parametersValue += string.Join ("", Enumerable.Repeat (' ', maximumLength - parametersValue.Length));
+
+					m_commandLineProvider.WriteLine ($"  {parametersValue} {parameter.Description}");
+				}
+			}
+			if (commandParameters.Any (a => !a.Required)) {
+				m_commandLineProvider.WriteLine ("The following options are available:");
+
+				var nonRequiredParameters = commandParameters.Where (a => !a.Required);
+				var maximumLength = nonRequiredParameters
+					.Select (a => (!string.IsNullOrEmpty (a.FullName) ? a.FullName.Count () + 2 : 0) + (!string.IsNullOrEmpty (a.ShortName) ? a.ShortName.Count () + 1 : 0))
+					.Max ();
+
+				foreach (var parameter in nonRequiredParameters) {
+					var parameters = new List<string> ();
+					if (!string.IsNullOrEmpty (parameter.FullName)) parameters.Add ($"--{parameter.FullName}");
+					if (!string.IsNullOrEmpty (parameter.ShortName)) parameters.Add ($"-{parameter.ShortName}");
+
+					var parametersValue = string.Join (' ', parameters);
+
+
+					m_commandLineProvider.WriteLine ($"  {string.Join (' ', parameters)} {parameter.Description}");
+				}
+			}
+		}
+
+		private void ShowApplicationUsage () {
+			if (!string.IsNullOrEmpty (m_applicationExecutable)) {
+				m_commandLineProvider.WriteLine ($"usage: {m_applicationExecutable} [<command>] [<parameters>]");
+				m_commandLineProvider.WriteLine (" ");
+			}
+		}
+
+		/// <summary>
+		/// Show application help and a list of available commands.
+		/// </summary>
+		private void ShowHelp ( List<string> parts, bool fullInfo = false ) {
+			if (fullInfo) {
+				m_commandLineProvider.WriteLine ($"{m_applicationName} version {m_applicationVersion}");
+				if (!string.IsNullOrEmpty (m_applicationCopyright)) m_commandLineProvider.WriteLine (m_applicationCopyright);
+				m_commandLineProvider.WriteLine (" ");
+				if (!string.IsNullOrEmpty (m_applicationDescription)) {
+					m_commandLineProvider.WriteLine (m_applicationDescription);
+					m_commandLineProvider.WriteLine (" ");
+				}
+
+				if (m_commands.Any () || m_asyncCommands.Any ()) {
+					if (parts.Any (IsHelpParameter) && ShowHelpBySingleCommand (parts)) return;
+
+					ShowApplicationUsage ();
+
+					var maximumLength = m_commands
+						.Select (a => a.Key)
+						.Concat (m_asyncCommands.Select (b => b.Key))
+						.Select (a => a.Length)
+						.Max () + 1;
+					m_commandLineProvider.WriteLine ("The following commands are available:");
+
+					foreach (var command in m_commands) {
+						var name = command.Key;
+						var value = command.Value;
+						if (name.Length < maximumLength) name += string.Join ("", Enumerable.Repeat (' ', maximumLength - name.Length));
+
+						m_commandLineProvider.WriteLine ($"  {name}{value.Description}");
+					}
+					foreach (var asyncCommand in m_asyncCommands) {
+						var name = asyncCommand.Key;
+						var value = asyncCommand.Value;
+						if (name.Length < maximumLength) name += string.Join ("", Enumerable.Repeat (' ', maximumLength - name.Length));
+
+						m_commandLineProvider.WriteLine ($"  {name}{value.Description}");
+					}
+				} else {
+					ShowApplicationUsage ();
+				}
+			} else {
+				if (!parts.Any ()) return;
+
+				var command = parts.First ();
+				if (m_commands.ContainsKey (command) || m_asyncCommands.ContainsKey (command)) {
+					m_commandLineProvider.WriteLine ($" ");
+					if (!ShowHelpBySingleCommand (parts)) ShowApplicationUsage ();
+				} else {
+					ShowApplicationUsage ();
+
+					m_commandLineProvider.WriteLine ($"{m_applicationName} version {m_applicationVersion}");
+					m_commandLineProvider.WriteLine ("Command is incorrect!");
+				}
+			}
+		}
+
+		private void ShowOptionsHelp () {
+			m_commandLineProvider.WriteLine ($"{m_applicationName} version {m_applicationVersion}");
+			if (!string.IsNullOrEmpty (m_applicationCopyright)) m_commandLineProvider.WriteLine (m_applicationCopyright);
+			m_commandLineProvider.WriteLine (" ");
+			if (!string.IsNullOrEmpty (m_applicationDescription)) {
+				m_commandLineProvider.WriteLine (m_applicationDescription);
+				m_commandLineProvider.WriteLine (" ");
+			}
+			if (!string.IsNullOrEmpty (m_applicationExecutable)) {
+				m_commandLineProvider.WriteLine ($"usage: {m_applicationExecutable} [<options>]");
+				m_commandLineProvider.WriteLine (" ");
+			}
+
+			if (m_options.Any ()) ShowParameters (m_options);
+		}
+
+		private void ShowCommandUsage ( string command, bool haveDefault ) {
+			m_commandLineProvider.WriteLine ($"usage: {m_applicationExecutable} {command}{(haveDefault ? " [default parameters]" : "")} [<parameters>]");
+			m_commandLineProvider.WriteLine (" ");
+		}
+
+		private bool ShowHelpBySingleCommand ( List<string> parts ) {
+			var command = parts.First ();
+
+			if (m_commands.ContainsKey (command)) {
+				var selectedCommand = m_commands [command];
+				ShowCommandUsage (command, selectedCommand.Parameters.Any (a => a.Default));
+				ShowCommandHelp (selectedCommand.Description, selectedCommand.Parameters);
+				return true;
+			}
+			if (m_asyncCommands.ContainsKey (command)) {
+				var selectedCommand = m_asyncCommands [command];
+				ShowCommandUsage (command, selectedCommand.Parameters.Any (a => a.Default));
+				ShowCommandHelp (selectedCommand.Description, selectedCommand.Parameters);
+				return true;
+			}
+
+			return false;
+		}
+
+		private List<string> GetParts () {
+			var result = new List<string> ();
+			var currentPart = new StringBuilder ();
+			var parameterStarted = false;
+			char? previousCharacter = null;
+			int currentIndex = -1;
+			foreach (var character in m_commandLine) {
+				if (currentIndex > -1) previousCharacter = m_commandLine [currentIndex];
+				currentIndex++;
+
+				if (character == ' ' && !parameterStarted) {
+					result.Add (currentPart.ToString ());
+					currentPart.Clear ();
+					continue;
+				}
+				if (character == '-' && (previousCharacter == ' ' || currentIndex == 0) && !parameterStarted) {
+					parameterStarted = true;
+					result.Add (currentPart.ToString ());
+					currentPart.Clear ();
+				}
+				if (character == '-' && previousCharacter == ' ' && parameterStarted && currentPart.Length > 2) {
+					parameterStarted = true;
+					result.Add (currentPart.ToString ());
+					currentPart.Clear ();
+				}
+
+				currentPart.Append (character);
+			}
+
+			if (currentPart.Length > 0) result.Add (currentPart.ToString ());
+
+			return result
+				.Where (a => !string.IsNullOrEmpty (a))
+				.Select (a => a.Trim ())
+				.ToList ();
+		}
+
+		private void ShowVersion () => m_commandLineProvider.WriteLine ($"{m_applicationVersion}");
+
+		private bool IsVersion () => m_commandLine is "-v" or "--version";
+
+		private bool IsHelpParameter ( string part ) => part is "-h" or "--help";
+
+		public static void ParseParameters ( List<string> parts, out string command, out Dictionary<string, string> parameters, out string defaultParameter, bool asCommand ) {
+			var innerParts = parts.ToList ();
+			if (asCommand) {
+				command = innerParts.First ().ToLowerInvariant ();
+				innerParts.RemoveAt (0);
+			} else {
+				command = "";
+			}
+
+			var isHaveDefaultParameter = innerParts.Count > 0 && !innerParts.ElementAt (0).StartsWith ("-");
+			defaultParameter = isHaveDefaultParameter ? innerParts.ElementAt (0) : "";
+
+			parameters = innerParts
+				.Skip (isHaveDefaultParameter ? 1 : 0)
+				.Where (a => (a.StartsWith ("-") && a.Length > 1) || (a.StartsWith ("--") && a.Length > 2))
+				.Select (
+					a => {
+						var clearPrefix = a.StartsWith ("--") ? a.Substring (2) : a.Substring (1);
+						var indexEqual = clearPrefix.IndexOf ("=");
+						if (indexEqual == -1) return new { Name = clearPrefix, Value = "" };
+
+						return new { Name = clearPrefix.Substring (0, indexEqual), Value = clearPrefix.Substring (indexEqual + 1) };
+					}
+				)
+				.DistinctBy (a => a.Name)
+				.ToDictionary (a => a.Name, a => a.Value);
+		}
+
+		public static CommandLine Console () => new CommandLine (new ConsoleCommandLineProvider ());
+
+	}
 
 }

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../ExampleApp/ExampleApp.csproj" />
+  <Project Path="../FlowCommandLineTests/FlowCommandLineTests.csproj" />
+  <Project Path="FlowCommandLine.csproj" />
+</Solution>
