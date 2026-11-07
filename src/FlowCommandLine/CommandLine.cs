@@ -100,7 +100,8 @@ namespace FlowCommandLine {
 				return new FlowCommandResult {
 					EmptyInput = string.IsNullOrEmpty (m_commandLine),
 					CommandHandled = false,
-					Handled = true
+					Handled = true,
+					Failed = false
 				};
 			}
 
@@ -111,12 +112,14 @@ namespace FlowCommandLine {
 				return new FlowCommandResult {
 					EmptyInput = string.IsNullOrEmpty (m_commandLine),
 					CommandHandled = false,
-					Handled = parts.Any ()
+					Handled = parts.Any (),
+					Failed = false
 				};
 			}
 
 			ParseParameters (parts, out var command, out var parameters, out var defaultParameter, asCommand: true);
 
+			var isFailed = false;
 			try {
 				if (m_commands.TryGetValue (command, out var flowCommand)) {
 					flowCommand.Execute (parameters, m_commandLineProvider, defaultParameter);
@@ -124,7 +127,8 @@ namespace FlowCommandLine {
 					return new FlowCommandResult {
 						EmptyInput = string.IsNullOrEmpty (m_commandLine),
 						CommandHandled = true,
-						Handled = false
+						Handled = false,
+						Failed = false,
 					};
 				}
 				if (m_asyncCommands.TryGetValue (command, out var flowAsyncCommand)) {
@@ -132,10 +136,12 @@ namespace FlowCommandLine {
 					return new FlowCommandResult {
 						EmptyInput = string.IsNullOrEmpty (m_commandLine),
 						CommandHandled = true,
-						Handled = false
+						Handled = false,
+						Failed = false,
 					};
 				}
 			} catch {
+				isFailed = true;
 			}
 
 			ShowHelp (parts);
@@ -143,7 +149,8 @@ namespace FlowCommandLine {
 			return new FlowCommandResult {
 				EmptyInput = string.IsNullOrEmpty (m_commandLine),
 				CommandHandled = false,
-				Handled = false
+				Handled = false,
+				Failed = isFailed
 			};
 		}
 
@@ -159,7 +166,8 @@ namespace FlowCommandLine {
 				return new FlowCommandResult {
 					EmptyInput = string.IsNullOrEmpty (m_commandLine),
 					CommandHandled = false,
-					Handled = true
+					Handled = true,
+					Failed = false
 				};
 			}
 
@@ -170,12 +178,14 @@ namespace FlowCommandLine {
 				return new FlowCommandResult {
 					EmptyInput = string.IsNullOrEmpty (m_commandLine),
 					CommandHandled = false,
-					Handled = parts.Any ()
+					Handled = parts.Any (),
+					Failed = false
 				};
 			}
 
 			ParseParameters (parts, out var command, out var parameters, out var defaultParameter, asCommand: true);
 
+			var isFailed = false;
 			try {
 				if (m_commands.TryGetValue (command, out var flowCommand)) {
 					flowCommand.Execute (parameters, m_commandLineProvider, defaultParameter);
@@ -183,10 +193,12 @@ namespace FlowCommandLine {
 					return new FlowCommandResult {
 						EmptyInput = string.IsNullOrEmpty (m_commandLine),
 						CommandHandled = true,
-						Handled = false
+						Handled = false,
+						Failed = false
 					};
 				}
 			} catch {
+				isFailed = true;
 			}
 
 			ShowHelp (parts);
@@ -194,7 +206,8 @@ namespace FlowCommandLine {
 			return new FlowCommandResult {
 				EmptyInput = string.IsNullOrEmpty (m_commandLine),
 				CommandHandled = false,
-				Handled = false
+				Handled = false,
+				Failed = isFailed
 			};
 		}
 

@@ -18,6 +18,11 @@
         /// </summary>
         public bool Handled { get; set; }
 
-    }
+		/// <summary>
+		/// Was operation is failed.
+		/// </summary>
+		public bool Failed { get; set; }
+
+	}
 
 }
