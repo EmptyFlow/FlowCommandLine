@@ -19,9 +19,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore src/FlowCommandLine/FlowCommandLine.slnx
     - name: Build
-      run: dotnet build --configuration Release src/FlowCommandLine/FlowCommandLine.sln
+      run: dotnet build --configuration Release src/FlowCommandLine/FlowCommandLine.slnx
     - name: Tests
-      run: dotnet test --configuration Release src/FlowCommandLine/FlowCommandLine.sln
+      run: dotnet test --configuration Release src/FlowCommandLine/FlowCommandLine.slnx
     - name: Pack package
       run: dotnet pack --configuration Release --no-build --output . src/FlowCommandLine/FlowCommandLine.csproj
     - uses: actions/upload-artifact@v5
